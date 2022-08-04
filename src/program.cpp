@@ -105,7 +105,7 @@ namespace ogle
 
     void Program::initialize()
     {
-        glUseProgram(_program);
+        //glUseProgram(_program);
 
         glGenBuffers(1, &_ubo_vs);
         glBindBuffer(GL_UNIFORM_BUFFER, _ubo_vs);
@@ -113,12 +113,12 @@ namespace ogle
     }
 
     void Program::apply()
-    {
-        // glEnable(_program);
+    {        
         glUseProgram(_program);
 
         glBindBuffer(GL_UNIFORM_BUFFER, _ubo_vs);
         glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Uniform), &_uniform);
+        
         glBindBufferBase(GL_UNIFORM_BUFFER, 0, _ubo_vs);
     }
 

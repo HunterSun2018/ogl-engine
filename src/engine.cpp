@@ -22,76 +22,15 @@ namespace ogle
         glfwTerminate();
     }
 
+    /**
+     * @brief
+     *
+     * @param error
+     * @param description
+     */
     static void glfw_error_callback(int error, const char *description)
     {
-        throw runtime_error(fmt::format("glfw error: {}", description));
-    }
-
-    static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mods)
-    {
-        if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
-            glfwSetWindowShouldClose(window, GLFW_TRUE);
-    }
-
-#define ENUM2STR(x) \
-    case (x):       \
-        return (#x)
-
-    void GLAPIENTRY gldebug(GLenum src, GLenum type, GLuint id, GLenum severity,
-                            GLsizei len, const char *msg, const void *cls)
-    {
-        auto eunm_to_str = [](GLenum type) -> string
-        {
-            switch (type)
-            {
-                // Source
-                ENUM2STR(GL_DEBUG_SOURCE_API);
-                ENUM2STR(GL_DEBUG_SOURCE_WINDOW_SYSTEM);
-                ENUM2STR(GL_DEBUG_SOURCE_SHADER_COMPILER);
-                ENUM2STR(GL_DEBUG_SOURCE_THIRD_PARTY);
-                ENUM2STR(GL_DEBUG_SOURCE_APPLICATION);
-                ENUM2STR(GL_DEBUG_SOURCE_OTHER);
-                // Type
-                ENUM2STR(GL_DEBUG_TYPE_ERROR);
-                ENUM2STR(GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR);
-                ENUM2STR(GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR);
-                ENUM2STR(GL_DEBUG_TYPE_PORTABILITY);
-                ENUM2STR(GL_DEBUG_TYPE_PERFORMANCE);
-                ENUM2STR(GL_DEBUG_TYPE_OTHER);
-            default:
-                return "unkonw";
-            }
-        };
-
-        cerr << fmt::format("[GLDEBUG] {} {} : {}", eunm_to_str(src), eunm_to_str(type), msg);
-    }
-
-    void GLAPIENTRY check_error(GLenum error)
-    {
-        auto eunm_to_str = [](GLenum type) -> string
-        {
-            switch (type)
-            {
-
-                ENUM2STR(GL_NO_ERROR);
-                ENUM2STR(GL_INVALID_ENUM);
-                ENUM2STR(GL_INVALID_VALUE);
-                ENUM2STR(GL_INVALID_OPERATION);
-                ENUM2STR(GL_STACK_OVERFLOW);
-                ENUM2STR(GL_STACK_UNDERFLOW);
-                ENUM2STR(GL_OUT_OF_MEMORY);
-                ENUM2STR(GL_INVALID_FRAMEBUFFER_OPERATION);
-                ENUM2STR(GL_CONTEXT_LOST);
-            default:
-                return "unkonw";
-            }
-        };
-
-        if (error != GL_NO_ERROR)
-        {
-            cerr << fmt::format("[glGetError] : {}\n", eunm_to_str(error));
-            exit(1);
-        }
+        throw runtime_error(format("glfw error: {}", description));
     }
 
     std::shared_ptr<Engine> Engine::instance()
@@ -110,17 +49,49 @@ namespace ogle
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
         glfwWindowHint(GLFW_SAMPLES, 4);
 
-        // gladLoadGL();
-
-        // glDebugMessageCallback(gldebug, nullptr);
-        // glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+#ifndef NDEBUG
+        //glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
+#endif
 
         return shared_ptr<Engine>(new Engine());
     }
 
+    /**
+     * @brief
+     *
+     * @param window
+     * @param width
+     * @param height
+     */
     void glfw_window_size_callback(GLFWwindow *window, int width, int height)
     {
         glViewport(0, 0, width, height);
+    }
+
+    /**
+     * @brief
+     *
+     * @param window
+     * @param key
+     * @param scancode
+     * @param action
+     * @param mode
+     */
+    static void key_callback(GLFWwindow *window, int key, int scancode, int action, int mode)
+    {
+        if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+            glfwSetWindowShouldClose(window, GLFW_TRUE);
+    }
+    /**
+     * @brief A callback function for capturing mouse event
+     *
+     * @param window
+     * @param xpos
+     * @param ypos
+     */
+    void cursor_pos_callback(GLFWwindow *window, double xpos, double ypos)
+    {
+        // Engine::instance()->cursor_pos_event(window, xpos, ypos);
     }
 
     void Engine::set_window(size_t width, size_t height, std::string_view title)
@@ -131,6 +102,8 @@ namespace ogle
         window = glfwCreateWindow(width, height, title.data(), nullptr, nullptr);
 
         glfwSetKeyCallback(window, key_callback);
+
+        glfwSetCursorPosCallback(window, cursor_pos_callback);
 
         glfwSetWindowSizeCallback(window, glfw_window_size_callback);
 
@@ -177,6 +150,7 @@ namespace ogle
             lastTime = currentTime;
         }
     }
+
     void Engine::render(sence_ptr sence, camera_ptr camera)
     {
         if (!window)
@@ -190,6 +164,10 @@ namespace ogle
 
         while (!glfwWindowShouldClose(window))
         {
+            glfwPollEvents();
+
+            camera->process_input(window);
+
             //
             //  Clear the screen
             //
@@ -201,7 +179,8 @@ namespace ogle
             glm::mat4 view = camera->get_view_matrix();
 
             program->set_mvp_matrices(model, view, project);
-            program->set_light_pos({10, 10, 10});
+            auto light_pos = view * glm::vec4(0.f , 10.f, -10.f, 1.0f);
+            program->set_light_pos(light_pos);
             program->apply();
 
             sence->draw();
@@ -209,11 +188,14 @@ namespace ogle
             auto error = glGetError();
             check_error(error);
 
-            //showFPS(window);
+            // showFPS(window);
 
             glfwSwapBuffers(window);
-
-            glfwPollEvents();
         }
     }
+
+    void Engine::cursor_pos_event(GLFWwindow *window, double xpos, double ypos)
+    {
+    }
+
 }

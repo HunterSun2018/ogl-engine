@@ -1,4 +1,7 @@
-#version 420
+//
+// Phong Lighting Model for vertex shader
+//
+#version 450
 #extension GL_ARB_separate_shader_objects : enable
 
 layout(std140, binding = 0) 
@@ -23,11 +26,13 @@ layout(location = 6) out vec2 texcoord;
 void main()
 {
 	gl_Position = matrix.mvpmat * vec4(attr_vertex, 1.0f);
+
 	vpos = (matrix.mvmat * vec4(attr_vertex, 1.0f)).xyz;
+
 	norm = mat3(matrix.mvmat) * attr_normal;
-
-	texcoord = attr_texcoord * vec2(2.0, 1.0);
-
+	
 	ldir = matrix.light_pos - vpos;
+
+	texcoord = attr_texcoord;
 }
 

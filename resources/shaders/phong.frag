@@ -1,3 +1,6 @@
+//
+// Phong Lighting Model for fragment shader
+//
 #version 450
 #extension GL_ARB_separate_shader_objects : enable
 
@@ -24,10 +27,12 @@ void main()
 
 	// XXX (1, 1, 1) diffuse color implied * texel * ndotl
 	vec3 diffuse = texel.rgb * ndotl;
-	vec3 specular = vec3(1.0, 1.0, 1.0) * pow(ndoth, 50.0);
+	
 	// XXX (1, 1, 1) specular color, 50.0 shininess
+	vec3 specular = vec3(1.0, 1.0, 1.0) * pow(ndoth, 50.0);
 
 	// XXX ambient (implied 0) + diffuse + specular
 	color.rgb = diffuse + specular;
+	
 	color.a = texel.a;
 }

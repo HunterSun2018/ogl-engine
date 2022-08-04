@@ -24,8 +24,8 @@ namespace ogle
 
     void Mesh::draw()
     {
-        //if (_wired) // Wireframe Mode
-        //    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        if (_wired) // Wireframe Mode
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
         if (_texture)
         {

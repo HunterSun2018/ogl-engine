@@ -12,9 +12,9 @@ namespace ogle
         /* data */
         GLFWwindow *window = nullptr;
         static std::shared_ptr<Engine> _instance;
-
+        
         Engine(/* args */);
-
+        
         
 
     public:
@@ -25,6 +25,11 @@ namespace ogle
         void set_window(size_t width, size_t height, std::string_view title);
 
         void render(sence_ptr sence, camera_ptr camera);
+
+        //
+        // Events
+        //
+        void cursor_pos_event(GLFWwindow *window, double xpos, double ypos);
     };
 
     using engine_ptr = std::shared_ptr<Engine>;

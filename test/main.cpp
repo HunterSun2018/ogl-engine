@@ -35,15 +35,15 @@ void run()
     //  Create a sence and add some meshes
     //
     auto sence = make_shared<Sence>();
-    auto mesh = Mesh::create_from_grid(10, 10, true);
+    auto mesh = Mesh::create_from_grid(100, 100, false);
     mesh->set_texture(Texture::create_2D_texture("resources/textures/2d/floor.jpg", "floor", false));
     sence->add(mesh);
 
     //
     //  Create a perspetive camera, set position and look at
     //
-    auto camera = Camera::create_from_perspective(90, width / height, 0.1, 1000);
-    camera->set_position(0, 2, 5);
+    auto camera = Camera::create_from_perspective(45.0f, double(width) / height, 0.1, 1000);
+    camera->set_position(0, 2, 2);
     camera->look_at(0, 2, 0);
 
     //

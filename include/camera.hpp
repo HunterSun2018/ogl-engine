@@ -22,9 +22,12 @@ namespace ogle
         create_from_ortho(float left, float right, float bottom, float top, float near, float far);
 
         void set_position(float x, float y, float z);
+        auto get_position() { return _pos; };
 
         void look_at(float x, float y, float z);
 
+        void process_input(GLFWwindow* window);
+        
         glm::mat4 get_project_matrix();
 
         glm::mat4 get_view_matrix();
