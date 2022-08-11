@@ -22,27 +22,44 @@ namespace ogle
         glDeleteVertexArrays(1, &VAO);
     }
 
-    void Mesh::draw()
+    void Mesh::draw(program_ptr program)
     {
+        auto program_material = dynamic_pointer_cast<ProgramMaterial>(program);
+        if (program_material && _material)
+        {
+            program_material->set_material(_material);
+        }
+
         if (_wired) // Wireframe Mode
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
-        if (_texture)
+        program->apply();
+
+        if (_tex_diffuse)
         {
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, _texture->getTexID());
+            glBindTexture(GL_TEXTURE_2D, _tex_diffuse->getTexID());
+        }
+
+        if (_tex_sepcular)
+        {
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, _tex_sepcular->getTexID());
         }
 
         glBindVertexArray(this->VAO);
-        // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->EBO);
-
+        
         glDrawElements(GL_TRIANGLES, this->indices.size(), GL_UNSIGNED_INT, 0);
-
-        // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        
         glBindVertexArray(0);
 
         if (_wired) // Wireframe Mode
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+
+    void Mesh::set_material(material_ptr material)
+    {
+        _material = material;
     }
 
     void Mesh::setupMesh()

@@ -10,7 +10,7 @@ namespace ogle
     {
     }
 
-    void Model::draw()
+    void Model::draw(program_ptr program)
     {
     }
 }

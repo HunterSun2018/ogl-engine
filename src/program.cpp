@@ -6,24 +6,7 @@ using namespace fmt;
 
 namespace ogle
 {
-    Program::Program(GLuint prog)
-    {
-        _program = prog;
-
-        glUseProgram(_program);
-
-        glGenBuffers(1, &_ubo_vs);
-        glBindBuffer(GL_UNIFORM_BUFFER, _ubo_vs);
-        glBufferData(GL_UNIFORM_BUFFER, sizeof(Uniform), &_uniform, GL_STREAM_DRAW);
-    }
-
-    Program::~Program()
-    {
-        if (glIsProgram(_program))
-            glDeleteProgram(_program);
-    }
-
-    GLuint Program::load_shader(std::string_view file_name, int type)
+    GLuint load_shader(std::string_view file_name, int type)
     {
         ifstream ifs(file_name.data(), ios::in | ios::binary);
         if (!ifs.is_open())
@@ -65,8 +48,7 @@ namespace ogle
         return shader;
     }
 
-    shared_ptr<Program>
-    Program::create_program(std::string_view vs_file_name, std::string_view fs_file_name)
+    GLuint create_program(std::string_view vs_file_name, std::string_view fs_file_name)
     {
         GLuint vs = load_shader(vs_file_name, GL_VERTEX_SHADER);
         GLuint fs = load_shader(fs_file_name, GL_FRAGMENT_SHADER);
@@ -100,39 +82,147 @@ namespace ogle
         glDeleteShader(vs);
         glDeleteShader(fs);
 
-        return make_shared<Program>(prog);
+        return prog;
     }
 
-    void Program::initialize()
+    /**
+     * @brief Phong light model program
+     *
+     */
+    class PhongProgramImp : public PhongProgram
     {
-        //glUseProgram(_program);
+    private:
+        /* data */
+        enum uniform_binding_index
+        {
+            VERTEX,
+            MATERIAL,
+            LIGHTING,
+        };
 
-        glGenBuffers(1, &_ubo_vs);
-        glBindBuffer(GL_UNIFORM_BUFFER, _ubo_vs);
-        glBufferData(GL_UNIFORM_BUFFER, sizeof(Uniform), &_uniform, GL_STREAM_DRAW);
-    }
+        GLuint _program;
+        GLuint _ubo_vs, _ubo_material, _ubo_fs;
 
-    void Program::apply()
-    {        
-        glUseProgram(_program);
+        glm::mat4 _mat_model, _mat_view, _mat_project;
+        material_ptr _material;
 
-        glBindBuffer(GL_UNIFORM_BUFFER, _ubo_vs);
-        glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Uniform), &_uniform);
-        
-        glBindBufferBase(GL_UNIFORM_BUFFER, 0, _ubo_vs);
-    }
+        struct __attribute__((packed)) Uniform
+        {
+            glm::mat4 mat_view;
+            glm::mat4 mat_project;
+            glm::mat4 mat_mv;
+            glm::mat4 mat_mvp;
+            glm::vec3 v3_light_pos;
+        } _uniform; //__attribute__((packed))
 
-    void Program::set_mvp_matrices(glm::mat4 m, glm::mat4 v, glm::mat4 p)
+        struct FsUniform // Fragment shader uniform
+        {
+            DirectionLight dir_light;
+            PointLight point_light[MAX_POINT_LIGHT_NUMBER];
+        } __attribute__((aligned(16))) _fs_uniform; //__attribute__((packed))
+
+    public:
+        PhongProgramImp(GLuint prog)
+        {
+            _program = prog;
+
+            glUseProgram(_program);
+
+            glGenBuffers(1, &_ubo_vs);
+            glBindBuffer(GL_UNIFORM_BUFFER, _ubo_vs);
+            glBufferData(GL_UNIFORM_BUFFER, sizeof(Uniform), &_uniform, GL_STREAM_DRAW);
+
+            glGenBuffers(1, &_ubo_material);
+            glBindBuffer(GL_UNIFORM_BUFFER, _ubo_material);
+            glBufferData(GL_UNIFORM_BUFFER, sizeof(Material), nullptr, GL_STREAM_DRAW);
+
+            glGenBuffers(1, &_ubo_fs);
+            glBindBuffer(GL_UNIFORM_BUFFER, _ubo_fs);
+            glBufferData(GL_UNIFORM_BUFFER, sizeof(FsUniform), nullptr, GL_STREAM_DRAW);
+        }
+
+        ~PhongProgramImp()
+        {
+            if (glIsProgram(_program))
+                glDeleteProgram(_program);
+        }
+
+        void set_light_pos(glm::vec3 pos);
+
+    public:
+        //
+        //  Program methods
+        //
+        void apply() override
+        {
+            _fs_uniform.dir_light.direction = _mat_view * glm::vec4(_fs_uniform.dir_light.direction, 0.0f);
+            glUseProgram(_program);
+
+            glBindBuffer(GL_UNIFORM_BUFFER, _ubo_vs);
+            glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Uniform), &_uniform);
+            glBindBufferBase(GL_UNIFORM_BUFFER, 0, _ubo_vs);
+
+            glBindBuffer(GL_UNIFORM_BUFFER, _ubo_material);
+            glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Material), _material.get());
+            glBindBufferBase(GL_UNIFORM_BUFFER, 1, _ubo_material);
+
+            glBindBuffer(GL_UNIFORM_BUFFER, _ubo_fs);
+            glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(FsUniform), &_fs_uniform);
+            glBindBufferBase(GL_UNIFORM_BUFFER, 2, _ubo_fs);
+        }
+        //
+        //  IProgramMaterial interfaces
+        //
+        virtual void set_material(material_ptr materail) override
+        {
+            _material = materail;
+        }
+        //
+        //  IProgramMatrix interfaces
+        //
+        virtual void set_model_matrix(const glm::mat4 &model) override
+        {
+            _mat_model = model;
+        }
+
+        virtual void set_view_matrix(const glm::mat4 &view) override
+        {
+            _mat_view = view;
+        }
+
+        virtual void set_project_matrix(const glm::mat4 &project) override
+        {
+            _mat_project = project;
+        }
+
+        void set_mvp_matrices(glm::mat4 m, glm::mat4 v, glm::mat4 p) override
+        {
+            _uniform.mat_view = v;
+            _uniform.mat_project = p;
+            _uniform.mat_mvp = p * v * m;
+            _uniform.mat_mv = v * m;
+
+            _mat_model = m;
+            _mat_view = v;
+            _mat_project = p;
+        }
+        //
+        //  IProgramLight interfaces
+        //
+        virtual void set_direction_light(const DirectionLight &dir_light) override
+        {
+            _fs_uniform.dir_light = dir_light;
+        }
+
+        virtual void set_point_light(size_t index, const PointLight &point_light) override
+        {
+        }
+    };
+
+    shared_ptr<PhongProgram>
+    PhongProgram::create(std::string_view vs_file_name, std::string_view fs_file_name)
     {
-        _uniform.mat_view = v;
-        _uniform.mat_project = p;
-        _uniform.mat_mvp = p * v * m;
-        _uniform.mat_mv = v * m;
-    }
-
-    void Program::set_light_pos(glm::vec3 pos)
-    {
-        _uniform.v3_light_pos = pos;
+        return static_pointer_cast<PhongProgram>(make_shared<PhongProgramImp>(create_program(vs_file_name, fs_file_name)));
     }
 
 }

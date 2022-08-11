@@ -24,20 +24,29 @@ void run()
 {
     using namespace ogle;
     size_t width = 1600, height = 900;
-
+    
     //
     //  Instance the engine and set window properties
     //
     auto engine = Engine::instance();
-    engine->set_window(width, height, "Demo");
+    engine->create_window(width, height, "Demo");
 
     //
     //  Create a sence and add some meshes
     //
     auto sence = make_shared<Sence>();
+    auto material = make_shared<Material>(32.f);
     auto mesh = Mesh::create_from_grid(100, 100, false);
-    mesh->set_texture(Texture::create_2D_texture("resources/textures/2d/floor.jpg", "floor", false));
+    mesh->set_diffuse_texture(Texture::create_2D_texture("resources/textures/2d/floor.jpg", "floor", false));
+    mesh->set_specular_texture(Texture::create_2D_texture("resources/textures/2d/floor_specular.png", "floor_specular", false));
+    mesh->set_material(material);
+
     sence->add(mesh);
+
+    sence->set_direction_light(glm::vec3{-1.f, -1.f, 0.f},
+                               glm::vec3{0.2f, 0.2f, 0.2f},
+                               glm::vec3{0.5f, 0.5f, 0.5f},
+                               glm::vec3{1.0f, 1.0f, 1.0f});
 
     //
     //  Create a perspetive camera, set position and look at

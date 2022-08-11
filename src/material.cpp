@@ -5,8 +5,9 @@ using namespace std;
 
 namespace ogle
 {
-    Material::Material(/* args */)
+    Material::Material(float shininess)
     {
+        _shininess = shininess;
     }
 
     Material::~Material()

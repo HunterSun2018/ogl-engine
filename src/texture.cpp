@@ -29,8 +29,7 @@ namespace ogle
         else
             stbi_set_flip_vertically_on_load(false);
 
-        glGenTextures(1, &tex->texID);
-        glActiveTexture(GL_TEXTURE0);
+        glGenTextures(1, &tex->texID);       
         glBindTexture(GL_TEXTURE_2D, tex->texID);
         glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &tex->anisoFilterLevel); // Request the maximum level of anisotropy the GPU used can support and use it
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, tex->anisoFilterLevel);

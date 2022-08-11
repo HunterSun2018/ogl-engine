@@ -16,6 +16,8 @@ namespace ogle
 
     Engine::~Engine()
     {
+        _programs.clear();
+
         if (window)
             glfwDestroyWindow(window);
 
@@ -50,7 +52,7 @@ namespace ogle
         glfwWindowHint(GLFW_SAMPLES, 4);
 
 #ifndef NDEBUG
-        //glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
+        // glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GL_TRUE);
 #endif
 
         return shared_ptr<Engine>(new Engine());
@@ -94,7 +96,7 @@ namespace ogle
         // Engine::instance()->cursor_pos_event(window, xpos, ypos);
     }
 
-    void Engine::set_window(size_t width, size_t height, std::string_view title)
+    void Engine::create_window(size_t width, size_t height, std::string_view title)
     {
         if (window)
             glfwDestroyWindow(window);
@@ -113,6 +115,8 @@ namespace ogle
 
         glfwSwapInterval(1);
 
+        create_programs();
+
         glViewport(0, 0, width, height);
 
         glEnable(GL_DEPTH_TEST);
@@ -123,6 +127,15 @@ namespace ogle
 
         glDebugMessageCallback(gldebug, nullptr);
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    }
+
+    void Engine::create_programs()
+    {
+        string shaders_path = "resources/shaders";
+
+        auto program = PhongProgram::create(shaders_path + "/spirv/vertex.spv",
+                                            shaders_path + "/spirv/fragment.spv");
+        _programs["Phong"] = program;
     }
 
     void showFPS(GLFWwindow *pWindow)
@@ -145,6 +158,7 @@ namespace ogle
             ss << "[" << fps << " FPS]";
 
             glfwSetWindowTitle(pWindow, ss.str().c_str());
+            // cout << ss.str();
 
             nbFrames = 0;
             lastTime = currentTime;
@@ -156,15 +170,15 @@ namespace ogle
         if (!window)
             throw runtime_error("The method 'set_window' wasn't called at once.");
 
-        string shaders_path = "resources/shaders";
-        auto program = Program::create_program(shaders_path + "/spirv/vertex.spv",
-                                               shaders_path + "/spirv/fragment.spv");
+        auto program = _programs["Phong"];
+
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
 
         while (!glfwWindowShouldClose(window))
         {
             glfwPollEvents();
+            glfwGetTime();
 
             camera->process_input(window);
 
@@ -174,21 +188,18 @@ namespace ogle
             glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // RGBA
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            glm::mat4 model(1.0f); // identity
-            glm::mat4 project = camera->get_project_matrix();
-            glm::mat4 view = camera->get_view_matrix();
+            // Update program lights
+            sence->update_lights(dynamic_pointer_cast<ProgramLight>(program));
 
-            program->set_mvp_matrices(model, view, project);
-            auto light_pos = view * glm::vec4(0.f , 10.f, -10.f, 1.0f);
-            program->set_light_pos(light_pos);
-            program->apply();
+            // Update program matrices
+            camera->update_program_matrix(dynamic_pointer_cast<ProgramMatrix>(program));
 
-            sence->draw();
+            sence->draw(program);
 
             auto error = glGetError();
             check_error(error);
 
-            // showFPS(window);
+            showFPS(window);
 
             glfwSwapBuffers(window);
         }

@@ -1,5 +1,6 @@
 #pragma once
 #include "pch.hpp"
+#include "program.hpp"
 
 namespace ogle
 {
@@ -31,6 +32,8 @@ namespace ogle
         glm::mat4 get_project_matrix();
 
         glm::mat4 get_view_matrix();
+
+        void update_program_matrix(program_matrix_ptr program);
     };
 
     using camera_ptr = std::shared_ptr<Camera>;

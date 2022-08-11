@@ -1,4 +1,5 @@
 #pragma once
+#include "pch.hpp"
 
 namespace ogle
 {
@@ -6,9 +7,11 @@ namespace ogle
     {
     private:
         /* data */
+        float _shininess;
     public:
-        Material(/* args */);
+        Material(float shininess);
         ~Material();
     };
 
+    using material_ptr = std::shared_ptr<Material>;    
 }

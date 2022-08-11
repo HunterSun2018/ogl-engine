@@ -121,4 +121,13 @@ namespace ogle
         _lookat = _pos + cameraFront;
     }
 
+    void Camera::update_program_matrix(program_matrix_ptr program)
+    {
+        if(program)
+        {
+            glm::mat4 model(1.0f); // identity
+
+            program->set_mvp_matrices(model, get_view_matrix(), get_project_matrix());
+        }
+    }
 }

@@ -11,6 +11,7 @@
 #pragma once
 //#include "pch.hpp"
 #include "texture.hpp"
+#include "program.hpp"
 
 namespace ogle
 {
@@ -33,15 +34,22 @@ namespace ogle
     public:
         std::vector<Vertex> vertices;
         std::vector<GLuint> indices;
-        texture_ptr _texture = nullptr;
+
+        material_ptr _material;
+        texture_ptr _tex_diffuse;
+        texture_ptr _tex_sepcular;
+
         bool _wired = false;
 
         Mesh(std::vector<Vertex> &vertices, std::vector<GLuint> &indices, bool wired = false);
         ~Mesh();
 
-        void draw();
+        void draw(program_ptr program);
 
-        void set_texture(texture_ptr tex) { _texture = tex; };
+        void set_diffuse_texture(texture_ptr tex) { _tex_diffuse = tex; };
+        void set_specular_texture(texture_ptr tex) { _tex_sepcular = tex; };
+
+        void set_material(material_ptr material);
         //
         //  Create a grid
         //  x : from -width/2 to width/2
