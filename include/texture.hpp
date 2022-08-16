@@ -13,12 +13,23 @@ namespace ogle
         GLenum texType, texInternalFormat, texFormat;
         std::string texName;
 
+        static std::shared_ptr<Texture>
+        generate_2D_texture(u_char *pdata, GLuint width, GLuint height, GLuint numComponents, std::string_view name);
+
     public:
         Texture();
         ~Texture();
 
+        //
+        //  Create texture from file
+        //
         static std::shared_ptr<Texture>
-        create_2D_texture(const char *texPath, std::string texName, bool texFlip);
+        create_2D_texture(std::string_view texPath, std::string_view texName, bool texFlip);
+        //
+        //  Create texture from memory
+        //
+        static std::shared_ptr<Texture>
+        create_2D_texture(u_char *pdata, size_t size, std::string_view name, bool flip);
 
         void setTextureHDR(const char *texPath, std::string texName, bool texFlip);
         void setTextureHDR(GLuint width, GLuint height, GLenum format, GLenum internalFormat, GLenum type, GLenum minFilter);

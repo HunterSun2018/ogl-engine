@@ -17,6 +17,7 @@ struct DirectionLight {
 struct PointLight {
     vec3 position;
     
+    bool  enable;
     float constant;
     float linear;
     float quadratic;
@@ -26,6 +27,8 @@ struct PointLight {
     vec3 specular;
 };
 
+#define NR_POINT_LIGHTS 4
+
 layout(binding = 1) uniform Material {
     float shininess;
 } material;
@@ -33,7 +36,7 @@ layout(binding = 1) uniform Material {
 layout(std430, binding = 2) uniform LightSource
 { 
     DirectionLight  dirLight;
-    PointLight      pointLight[4];   // The maximum limit is 4
+    PointLight      pointLights[NR_POINT_LIGHTS];   // The maximum limit is 4
 } lightSource;
 
 //layout(binding = 0) uniform sampler2D tex;
@@ -48,6 +51,7 @@ layout(location = 6) in vec2 texcoord;
 layout(location = 0) out vec4 color;
 
 vec3 CalcDirLight(DirectionLight light, vec3 normal, vec3 viewDir);
+vec3 CalcPointLight(PointLight light, vec3 normal, vec3 pos, vec3 viewDir);
 
 void main()
 {
@@ -56,9 +60,15 @@ void main()
 
     vec3 result = CalcDirLight(lightSource.dirLight, norm, vdir);
 
+    for(int i = 0; i < 2; i++)  //NR_POINT_LIGHTS
+    {
+        if(lightSource.pointLights[i].enable)
+            result += CalcPointLight(lightSource.pointLights[i], norm, vpos, vdir);
+    }   
+
     color = vec4(result, 1.0f);
-    
-    //color == vec4(1.0, 0.0, 0.0, 1.0);		
+        
+    //color = vec4(lightSource.pointLights[0].ambient, 1.0f);		// lightSource.pointLights[0].position
 }
 
 // Calculates the color when using a directional light.
@@ -69,7 +79,7 @@ vec3 CalcDirLight(DirectionLight light, vec3 normal, vec3 viewDir)
     float diff = max(dot(normal, lightDir), 0.0);
     // Specular shading
     vec3 reflectDir = reflect(-lightDir, normal);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0f);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
     // Combine results
     vec3 ambient = light.ambient * vec3(texture(tex_diffuse, texcoord));
     vec3 diffuse = light.diffuse * diff * vec3(texture(tex_diffuse, texcoord));

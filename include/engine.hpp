@@ -2,7 +2,7 @@
 
 //#include "ogle.hpp"
 #include "camera.hpp"
-#include "sence.hpp"
+#include "scene.hpp"
 
 namespace ogle
 {

@@ -68,6 +68,8 @@
         "typeindex": "cpp",
         "valarray": "cpp",
         "variant": "cpp",
-        "codecvt": "cpp"
+        "codecvt": "cpp",
+        "numbers": "cpp",
+        "semaphore": "cpp"
     }
 }

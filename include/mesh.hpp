@@ -29,25 +29,34 @@ namespace ogle
         glm::vec2 TexCoords;
     };
 
+    enum TEXTURE_TYPE
+    {
+        TEX_DIFFUSE,
+        TEX_SPECULAR,
+        TEX_NORMAL,
+        TEX_SHININESS,
+    };
+
     class Mesh
     {
     public:
-        std::vector<Vertex> vertices;
+        std::vector<Vertex> _vertices;
         std::vector<GLuint> indices;
 
         material_ptr _material;
-        texture_ptr _tex_diffuse;
-        texture_ptr _tex_sepcular;
+        // texture_ptr _tex_diffuse;
+        // texture_ptr _tex_sepcular;
+        std::map<TEXTURE_TYPE, texture_ptr> _textures;
 
-        bool _wired = false;
-
-        Mesh(std::vector<Vertex> &vertices, std::vector<GLuint> &indices, bool wired = false);
+        Mesh(std::vector<Vertex> &&vertices, std::vector<GLuint> &&indices, std::map<TEXTURE_TYPE, texture_ptr> &&textures);
         ~Mesh();
 
-        void draw(program_ptr program);
+        void draw(program_ptr program, bool wired = false);
 
-        void set_diffuse_texture(texture_ptr tex) { _tex_diffuse = tex; };
-        void set_specular_texture(texture_ptr tex) { _tex_sepcular = tex; };
+        // void set_diffuse_texture(texture_ptr tex) { _tex_diffuse = tex; };
+        // void set_specular_texture(texture_ptr tex) { _tex_sepcular = tex; };
+
+        void set_texture(TEXTURE_TYPE type, texture_ptr texture);
 
         void set_material(material_ptr material);
         //
@@ -56,12 +65,12 @@ namespace ogle
         //  y : 0
         //  z : from hight/2 to -hight/2
         //
-        static std::shared_ptr<Mesh> create_from_grid(size_t width, size_t hight, bool wired);
+        static std::shared_ptr<Mesh> create_from_grid(size_t width, size_t hight);
 
     private:
         GLuint VAO = 0, VBO = 0, EBO = 0;
 
-        void setupMesh();
+        void setup();
     };
 
     using mesh_ptr = std::shared_ptr<Mesh>;

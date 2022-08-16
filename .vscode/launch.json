@@ -19,7 +19,7 @@
             "program": "${workspaceFolder}/build/test/demo",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${workspaceFolder}",
+            "cwd": "${workspaceFolder}/",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",

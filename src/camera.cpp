@@ -123,7 +123,7 @@ namespace ogle
 
     void Camera::update_program_matrix(program_matrix_ptr program)
     {
-        if(program)
+        if (program)
         {
             glm::mat4 model(1.0f); // identity
 

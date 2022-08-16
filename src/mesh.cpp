@@ -6,13 +6,13 @@ using namespace std;
 
 namespace ogle
 {
-    Mesh::Mesh(std::vector<Vertex> &vertices, std::vector<GLuint> &indices, bool wired)
+    Mesh::Mesh(std::vector<Vertex> &&vertices, std::vector<GLuint> &&indices, std::map<TEXTURE_TYPE, texture_ptr> &&textures)
     {
-        this->vertices = vertices;
-        this->indices = indices;
-        this->_wired = wired;
+        this->_vertices = move(vertices);
+        this->indices = move(indices);
+        this->_textures = move(textures);
 
-        this->setupMesh();
+        this->setup();
     }
 
     Mesh::~Mesh()
@@ -22,7 +22,7 @@ namespace ogle
         glDeleteVertexArrays(1, &VAO);
     }
 
-    void Mesh::draw(program_ptr program)
+    void Mesh::draw(program_ptr program, bool wired)
     {
         auto program_material = dynamic_pointer_cast<ProgramMaterial>(program);
         if (program_material && _material)
@@ -30,31 +30,36 @@ namespace ogle
             program_material->set_material(_material);
         }
 
-        if (_wired) // Wireframe Mode
+        if (wired) // Wireframe Mode
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
         program->apply();
 
-        if (_tex_diffuse)
+        if (_textures.find(TEX_DIFFUSE) != end(_textures))
         {
             glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, _tex_diffuse->getTexID());
+            glBindTexture(GL_TEXTURE_2D, _textures[TEX_DIFFUSE]->getTexID());
         }
 
-        if (_tex_sepcular)
+        if (_textures.find(TEX_SPECULAR) != end(_textures))
         {
-            glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, _tex_sepcular->getTexID());
+            glActiveTexture(GL_TEXTURE0 + TEX_SPECULAR);
+            glBindTexture(GL_TEXTURE_2D, _textures[TEX_SPECULAR]->getTexID());
         }
 
         glBindVertexArray(this->VAO);
-        
+
         glDrawElements(GL_TRIANGLES, this->indices.size(), GL_UNSIGNED_INT, 0);
-        
+
         glBindVertexArray(0);
 
-        if (_wired) // Wireframe Mode
+        if (wired) // Wireframe Mode
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
+
+    void Mesh::set_texture(TEXTURE_TYPE type, texture_ptr texture)
+    {
+        _textures[type] = texture;
     }
 
     void Mesh::set_material(material_ptr material)
@@ -62,7 +67,7 @@ namespace ogle
         _material = material;
     }
 
-    void Mesh::setupMesh()
+    void Mesh::setup()
     {
         //
         // A VAO(vertext array object) object contains a VBO(array buffer object) object and a EBO(element buffer object)
@@ -80,7 +85,7 @@ namespace ogle
         //  Bind VBO and EBO for VAO
         //
         glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
-        glBufferData(GL_ARRAY_BUFFER, this->vertices.size() * sizeof(Vertex), &this->vertices[0], GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, this->_vertices.size() * sizeof(Vertex), &this->_vertices[0], GL_STATIC_DRAW);
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->EBO);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, this->indices.size() * sizeof(GLuint), &this->indices[0], GL_STATIC_DRAW);
@@ -112,10 +117,11 @@ namespace ogle
      *  y : 0
      *  z : from hight/2 to -hight/2
      */
-    std::shared_ptr<Mesh> Mesh::create_from_grid(size_t width, size_t hight, bool wired)
+    std::shared_ptr<Mesh> Mesh::create_from_grid(size_t width, size_t hight)
     {
         vector<Vertex> vertices;
         vector<GLuint> indices;
+        map<TEXTURE_TYPE, texture_ptr> textures;
 
         //
         //  Create vertices
@@ -149,6 +155,6 @@ namespace ogle
             }
         }
 
-        return make_shared<Mesh>(vertices, indices, wired);
+        return make_shared<Mesh>(move(vertices), move(indices), move(textures));
     }
 }

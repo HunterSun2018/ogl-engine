@@ -16,33 +16,67 @@ namespace ogle
     }
 
     std::shared_ptr<Texture>
-    Texture::create_2D_texture(const char *texPath, std::string texName, bool texFlip)
+    Texture::create_2D_texture(u_char *pdata, size_t size, std::string_view name, bool flip)
     {
-        auto tex = make_shared<Texture>();
+        if (flip)
+            stbi_set_flip_vertically_on_load(true);
+        else
+            stbi_set_flip_vertically_on_load(false);
 
-        tex->texType = GL_TEXTURE_2D;
+        int width, height, numComponents;
+        unsigned char *tex_data = stbi_load_from_memory(pdata, size, &width, &height, &numComponents, 0);
 
-        std::string tempPath = std::string(texPath);
+        if (!tex_data)
+            throw runtime_error(format("TEXTURE FAILED - LOADING : {} ", name));
+
+        auto texture = generate_2D_texture(tex_data, width, height, numComponents, name);
+
+        stbi_image_free(tex_data);
+
+        return texture;
+    }
+
+    std::shared_ptr<Texture>
+    Texture::create_2D_texture(std::string_view tex_path, std::string_view texName, bool texFlip)
+    {
+        std::string tempPath = std::string(tex_path);
 
         if (texFlip)
             stbi_set_flip_vertically_on_load(true);
         else
             stbi_set_flip_vertically_on_load(false);
 
-        glGenTextures(1, &tex->texID);       
+        int width, height, numComponents;
+        unsigned char *tex_data = stbi_load(tempPath.c_str(), &width, &height, &numComponents, 0);
+
+        if (!tex_data)
+            throw runtime_error(format("TEXTURE FAILED - LOADING : {} ", tex_path));
+
+        auto texture = generate_2D_texture(tex_data, width, height, numComponents, texName);
+
+        stbi_image_free(tex_data);
+
+        return texture;
+    }
+
+    std::shared_ptr<Texture>
+    Texture::generate_2D_texture(u_char *tex_data, GLuint width, GLuint height, GLuint numComponents, std::string_view name)
+    {
+        auto tex = make_shared<Texture>();
+
+        tex->texType = GL_TEXTURE_2D;
+
+        glGenTextures(1, &tex->texID);
         glBindTexture(GL_TEXTURE_2D, tex->texID);
         glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &tex->anisoFilterLevel); // Request the maximum level of anisotropy the GPU used can support and use it
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, tex->anisoFilterLevel);
 
-        int width, height, numComponents;
-        unsigned char *texData = stbi_load(tempPath.c_str(), &width, &height, &numComponents, 0);
-
         tex->texWidth = width;
         tex->texHeight = height;
         tex->texComponents = numComponents;
-        tex->texName = texName;
+        tex->texName = name;
 
-        if (texData)
+        if (tex_data)
         {
             if (numComponents == 1)
                 tex->texFormat = GL_RED;
@@ -52,7 +86,7 @@ namespace ogle
                 tex->texFormat = GL_RGBA;
             tex->texInternalFormat = tex->texFormat;
 
-            glTexImage2D(GL_TEXTURE_2D, 0, tex->texInternalFormat, tex->texWidth, tex->texHeight, 0, tex->texFormat, GL_UNSIGNED_BYTE, texData);
+            glTexImage2D(GL_TEXTURE_2D, 0, tex->texInternalFormat, tex->texWidth, tex->texHeight, 0, tex->texFormat, GL_UNSIGNED_BYTE, tex_data);
 
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -64,11 +98,7 @@ namespace ogle
         else
         {
             glBindTexture(GL_TEXTURE_2D, 0);
-
-            throw runtime_error(format("TEXTURE FAILED - LOADING : {} ", texPath));
         }
-
-        stbi_image_free(texData);
 
         glBindTexture(GL_TEXTURE_2D, 0);
 

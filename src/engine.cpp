@@ -113,7 +113,7 @@ namespace ogle
 
         gladLoadGL();
 
-        glfwSwapInterval(1);
+        glfwSwapInterval(0);
 
         create_programs();
 
@@ -180,16 +180,13 @@ namespace ogle
             glfwPollEvents();
             glfwGetTime();
 
-            camera->process_input(window);
+            //camera->process_input(window);
 
             //
             //  Clear the screen
             //
             glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // RGBA
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-            // Update program lights
-            sence->update_lights(dynamic_pointer_cast<ProgramLight>(program));
 
             // Update program matrices
             camera->update_program_matrix(dynamic_pointer_cast<ProgramMatrix>(program));

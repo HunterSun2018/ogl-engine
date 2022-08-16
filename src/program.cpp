@@ -105,8 +105,10 @@ namespace ogle
 
         glm::mat4 _mat_model, _mat_view, _mat_project;
         material_ptr _material;
+        DirectionLight _dir_light;
+        PointLight _point_lights[4];
 
-        struct __attribute__((packed)) Uniform
+        struct Uniform
         {
             glm::mat4 mat_view;
             glm::mat4 mat_project;
@@ -118,8 +120,8 @@ namespace ogle
         struct FsUniform // Fragment shader uniform
         {
             DirectionLight dir_light;
-            PointLight point_light[MAX_POINT_LIGHT_NUMBER];
-        } __attribute__((aligned(16))) _fs_uniform; //__attribute__((packed))
+            PointLight point_lights[MAX_POINT_LIGHT_NUMBER];
+        } _fs_uniform; //__attribute__((packed))
 
     public:
         PhongProgramImp(GLuint prog)
@@ -155,7 +157,16 @@ namespace ogle
         //
         void apply() override
         {
-            _fs_uniform.dir_light.direction = _mat_view * glm::vec4(_fs_uniform.dir_light.direction, 0.0f);
+            _fs_uniform.dir_light.direction = glm::mat3(_mat_view) * (_dir_light.direction);
+
+            for (size_t i = 0; i < 4; i++)
+                _fs_uniform.point_lights[i].position = glm::mat3(_mat_view) * (_point_lights[i].position);
+
+            _uniform.mat_view = _mat_view;
+            _uniform.mat_project = _mat_project;
+            _uniform.mat_mvp = _mat_project * _mat_view * _mat_model;
+            _uniform.mat_mv = _mat_view * _mat_model;
+
             glUseProgram(_program);
 
             glBindBuffer(GL_UNIFORM_BUFFER, _ubo_vs);
@@ -197,11 +208,6 @@ namespace ogle
 
         void set_mvp_matrices(glm::mat4 m, glm::mat4 v, glm::mat4 p) override
         {
-            _uniform.mat_view = v;
-            _uniform.mat_project = p;
-            _uniform.mat_mvp = p * v * m;
-            _uniform.mat_mv = v * m;
-
             _mat_model = m;
             _mat_view = v;
             _mat_project = p;
@@ -211,11 +217,14 @@ namespace ogle
         //
         virtual void set_direction_light(const DirectionLight &dir_light) override
         {
-            _fs_uniform.dir_light = dir_light;
+            _dir_light = dir_light;
+            _fs_uniform.dir_light = _dir_light;
         }
 
         virtual void set_point_light(size_t index, const PointLight &point_light) override
         {
+            _point_lights[index] = point_light;
+            _fs_uniform.point_lights[index] = point_light;
         }
     };
 
