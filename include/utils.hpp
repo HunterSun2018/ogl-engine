@@ -4,6 +4,6 @@
 namespace ogle
 {
     void GLAPIENTRY check_error(GLenum error);
-    void GLAPIENTRY gldebug(GLenum src, GLenum type, GLuint id, GLenum severity,
-                            GLsizei len, const char *msg, const void *cls);
+    void GLAPIENTRY gl_debug_output(GLenum src, GLenum type, GLuint id, GLenum severity,
+                                    GLsizei len, const char *msg, const void *cls);
 }

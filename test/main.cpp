@@ -46,7 +46,7 @@ void run()
 
     scene->add(mesh);
 
-    scene->set_direction_light(glm::vec3{0.f, -0.2f, 1.f},
+    scene->set_direction_light(glm::vec3{-1.f, -0.2f, -1.f},
                                glm::vec3{0.2f, 0.2f, 0.2f},
                                glm::vec3{1.0f, 1.0f, 1.0f},
                                glm::vec3{1.0f, 1.0f, 1.0f});
@@ -76,7 +76,7 @@ void run()
 
     // scale 1 / 100 and translate to (0, 0, -10)
 
-    auto mat_model = glm::translate(mat4(1.0f), vec3(10.f, 0.f, -20.0f));
+    auto mat_model = glm::translate(mat4(1.0f), vec3(0.f, 0.f, -20.0f));
     mat_model = glm::scale(mat_model, vec3(0.01, 0.01, 0.01));
 
     scene->add(morak, mat_model);

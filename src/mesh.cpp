@@ -157,4 +157,92 @@ namespace ogle
 
         return make_shared<Mesh>(move(vertices), move(indices), move(textures));
     }
+
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //  SkinnedMesh
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    SkinnedMesh::SkinnedMesh(std::vector<SkinnedVertex> &&vertices,
+                             std::vector<GLuint> &&indices,
+                             std::map<TEXTURE_TYPE, texture_ptr> &&textures)
+    {
+        //
+        // A VAO(vertext array object) object contains a VBO(array buffer object) object and a EBO(element buffer object)
+        //
+        glGenVertexArrays(1, &this->VAO);
+        glGenBuffers(1, &this->VBO);
+        glGenBuffers(1, &this->EBO);
+
+        //
+        //  Bind VAO
+        //
+        glBindVertexArray(this->VAO);
+
+        //
+        //  Bind VBO and EBO for VAO
+        //
+        glBindBuffer(GL_ARRAY_BUFFER, this->VBO);
+        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(SkinnedVertex), vertices.data(), GL_STATIC_DRAW);
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->EBO);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(GLuint), indices.data(), GL_STATIC_DRAW);
+        _index_size = indices.size();
+        
+        //
+        //  Set vertex attribute points
+        //
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(SkinnedVertex), (GLvoid *)0);
+
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(SkinnedVertex), (GLvoid *)offsetof(Vertex, Normal));
+
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(SkinnedVertex), (GLvoid *)offsetof(Vertex, TexCoords));
+
+        glEnableVertexAttribArray(VATTR_BONES);
+        glVertexAttribPointer(VATTR_BONES, 4, GL_UNSIGNED_INT, GL_FALSE, sizeof(SkinnedVertex), (GLvoid *)offsetof(SkinnedVertex, Bones));
+
+        glEnableVertexAttribArray(VATTR_WEIGHT);
+        glVertexAttribPointer(VATTR_WEIGHT, 4, GL_FLOAT, GL_FALSE, sizeof(SkinnedVertex), (GLvoid *)offsetof(SkinnedVertex, Weights));
+
+        //
+        //  Unbind VAO object
+        //
+        glBindVertexArray(0);
+    }
+
+    void SkinnedMesh::draw(program_ptr program, bool wired)
+    {
+        auto program_material = dynamic_pointer_cast<ProgramMaterial>(program);
+        if (program_material)
+        {
+            // program_material->set_material(_material);
+        }
+
+        program->apply();
+
+        if (_textures.find(TEX_DIFFUSE) != end(_textures))
+        {
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, _textures[TEX_DIFFUSE]->getTexID());
+        }
+
+        if (_textures.find(TEX_SPECULAR) != end(_textures))
+        {
+            glActiveTexture(GL_TEXTURE0 + TEX_SPECULAR);
+            glBindTexture(GL_TEXTURE_2D, _textures[TEX_SPECULAR]->getTexID());
+        }
+
+        if (wired) // Wireframe Mode
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+        glBindVertexArray(this->VAO);
+
+        glDrawElements(GL_TRIANGLES, this->_index_size, GL_UNSIGNED_INT, 0);
+
+        glBindVertexArray(0);
+
+        if (wired) // Wireframe Mode
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
 }

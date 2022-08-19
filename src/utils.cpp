@@ -8,10 +8,15 @@ using namespace std;
 
 namespace ogle
 {
-    void GLAPIENTRY gldebug(GLenum src, GLenum type, GLuint id, GLenum severity,
-                            GLsizei len, const char *msg, const void *cls)
+    void GLAPIENTRY gl_debug_output(GLenum src, GLenum type, GLuint id, GLenum severity,
+                                    GLsizei len, const char *msg, const void *cls)
     {
-        auto eunm_to_str = [](GLenum type) -> string
+        //if (id == 131169 || id == 131185 || id == 131218 || id == 131204)
+        //    return;
+        if(severity == GL_DEBUG_SEVERITY_NOTIFICATION)
+            return;
+
+        auto enum_to_str = [](GLenum type) -> string
         {
             switch (type)
             {
@@ -29,12 +34,17 @@ namespace ogle
                 ENUM2STR(GL_DEBUG_TYPE_PORTABILITY);
                 ENUM2STR(GL_DEBUG_TYPE_PERFORMANCE);
                 ENUM2STR(GL_DEBUG_TYPE_OTHER);
+                // Severity
+                ENUM2STR(GL_DEBUG_SEVERITY_HIGH);
+                ENUM2STR(GL_DEBUG_SEVERITY_MEDIUM);
+                ENUM2STR(GL_DEBUG_SEVERITY_LOW);
+                ENUM2STR(GL_DEBUG_SEVERITY_NOTIFICATION);
             default:
                 return "unkonw";
             }
         };
 
-        cerr << fmt::format("[GLDEBUG] {} {} : {}", eunm_to_str(src), eunm_to_str(type), msg);
+        cerr << fmt::format("[GLDEBUG] {} {} {}: {}", enum_to_str(src), enum_to_str(type), enum_to_str(severity), msg) << endl;
     }
 
     void GLAPIENTRY check_error(GLenum error)

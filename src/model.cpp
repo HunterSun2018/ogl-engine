@@ -62,14 +62,14 @@ namespace ogle
                 // mesh->mTextureCoords[0] ? vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y) : vec2(0.f, 0.f)};
 
                 // 处理顶点坐标、法线和纹理坐标
-                vertices.push_back(vertex);
+                vertices.emplace_back(vertex);
             }
             // 处理顶点索引
             for (GLuint i = 0; i < mesh->mNumFaces; i++)
             {
                 aiFace face = mesh->mFaces[i];
                 for (GLuint j = 0; j < face.mNumIndices; j++)
-                    indices.push_back(face.mIndices[j]);
+                    indices.emplace_back(face.mIndices[j]);
             }
             // 处理材质
             if (mesh->mMaterialIndex >= 0)
@@ -80,8 +80,8 @@ namespace ogle
                 auto tex_diffuse = this->load_material_texture(material,
                                                                aiTextureType_DIFFUSE, "texture_diffuse");
                 textures[TEX_DIFFUSE] = tex_diffuse;
-                
-                // Specular 
+
+                // Specular
                 auto tex_specular = this->load_material_texture(material,
                                                                 aiTextureType_SPECULAR, "texture_diffuse");
                 textures[TEX_SPECULAR] = tex_specular;

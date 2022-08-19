@@ -19,7 +19,9 @@ namespace ogle
     {
         VATTR_VERTEX,
         VATTR_NORMAL,
-        VATTR_TEXCOORD
+        VATTR_TEXCOORD,
+        VATTR_BONES,
+        VATTR_WEIGHT,
     };
 
     struct Vertex
@@ -39,15 +41,15 @@ namespace ogle
 
     class Mesh
     {
-    public:
+
         std::vector<Vertex> _vertices;
         std::vector<GLuint> indices;
 
         material_ptr _material;
-        // texture_ptr _tex_diffuse;
-        // texture_ptr _tex_sepcular;
+        
         std::map<TEXTURE_TYPE, texture_ptr> _textures;
 
+    public:
         Mesh(std::vector<Vertex> &&vertices, std::vector<GLuint> &&indices, std::map<TEXTURE_TYPE, texture_ptr> &&textures);
         ~Mesh();
 
@@ -74,4 +76,36 @@ namespace ogle
     };
 
     using mesh_ptr = std::shared_ptr<Mesh>;
+
+    ///////////////////////////////////////////////
+    //  SkinnedMesh
+    ///////////////////////////////////////////////
+    const size_t BONES_AMOUNT = 4;
+    struct SkinnedVertex
+    {
+        glm::vec3 Position;
+        glm::vec3 Normal;
+        glm::vec2 TexCoords;
+        GLuint Bones[BONES_AMOUNT];
+        GLuint Weights[BONES_AMOUNT];
+    };
+
+    class SkinnedMesh
+    {
+        GLuint VAO = 0, VBO = 0, EBO = 0;
+        size_t _index_size = 0;
+
+        std::map<TEXTURE_TYPE, texture_ptr> _textures;
+
+        void setup();
+
+    public:
+        SkinnedMesh(std::vector<SkinnedVertex> &&vertices, std::vector<GLuint> &&indices, std::map<TEXTURE_TYPE, texture_ptr> &&textures);
+
+        void update(double time);
+
+        void draw(program_ptr program, bool wired = false);
+    };
+
+    using skinned_mesh_ptr = std::shared_ptr<SkinnedMesh>;
 }

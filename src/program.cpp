@@ -3,6 +3,7 @@
 
 using namespace std;
 using namespace fmt;
+using namespace glm;
 
 namespace ogle
 {
@@ -160,7 +161,7 @@ namespace ogle
             _fs_uniform.dir_light.direction = glm::mat3(_mat_view) * (_dir_light.direction);
 
             for (size_t i = 0; i < 4; i++)
-                _fs_uniform.point_lights[i].position = glm::mat3(_mat_view) * (_point_lights[i].position);
+                _fs_uniform.point_lights[i].position = _mat_view * vec4(_point_lights[i].position, 1.0);
 
             _uniform.mat_view = _mat_view;
             _uniform.mat_project = _mat_project;
