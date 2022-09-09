@@ -69,7 +69,7 @@ void main()
         
     //color = vec4(lightSource.pointLights[0].ambient, 1.0f);		
     // lightSource.pointLights[0].position
-    //out_color = texture(tex_diffuse, in_texcoord);
+    out_color = texture(tex_diffuse, in_texcoord);
 }
 
 // Calculates the color when using a directional light.

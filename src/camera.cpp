@@ -115,20 +115,18 @@ namespace ogle
             front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
             front.y = sin(glm::radians(pitch));
             front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-            //cameraFront = glm::normalize(front);
+            // cameraFront = glm::normalize(front);
         }
 
-        
-        _lookat = _pos + glm::vec3(0.0f, 0.0f, -1.0f); //cameraFront;
+        _lookat = _pos + glm::vec3(0.0f, 0.0f, -1.0f); // cameraFront;
     }
 
     void Camera::update_program_matrix(program_matrix_ptr program)
     {
         if (program)
         {
-            glm::mat4 model(1.0f); // identity
-
-            program->set_mvp_matrices(model, get_view_matrix(), get_project_matrix());
+            program->set_view_matrix(get_view_matrix());
+            program->set_project_matrix(get_project_matrix());
         }
     }
 }

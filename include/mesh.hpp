@@ -13,11 +13,13 @@
 #include "texture.hpp"
 #include "program.hpp"
 
+#define ALIGNED16 __attribute__((aligned(16)))
+
 namespace ogle
 {
     enum
     {
-        VATTR_VERTEX,
+        VATTR_POSTION,
         VATTR_NORMAL,
         VATTR_TEXCOORD,
         VATTR_BONES,
@@ -41,19 +43,21 @@ namespace ogle
 
     class Mesh
     {
-
-        std::vector<Vertex> _vertices;
-        std::vector<GLuint> indices;
-
+        program_ptr _program;
         material_ptr _material;
-        
         std::map<TEXTURE_TYPE, texture_ptr> _textures;
+        uint _indieces_count = 0;
 
     public:
-        Mesh(std::vector<Vertex> &&vertices, std::vector<GLuint> &&indices, std::map<TEXTURE_TYPE, texture_ptr> &&textures);
-        ~Mesh();
+        virtual ~Mesh();
 
-        void draw(program_ptr program, bool wired = false);
+        static std::shared_ptr<Mesh>
+        create(std::vector<Vertex> &&vertices,
+               std::vector<GLuint> &&indices,
+               std::map<TEXTURE_TYPE, texture_ptr> &&textures, program_ptr program);
+
+        virtual void draw(double time, bool wired = false,
+                          std::function<void(program_ptr)> set_custom_state = nullptr);
 
         // void set_diffuse_texture(texture_ptr tex) { _tex_diffuse = tex; };
         // void set_specular_texture(texture_ptr tex) { _tex_sepcular = tex; };
@@ -61,18 +65,22 @@ namespace ogle
         void set_texture(TEXTURE_TYPE type, texture_ptr texture);
 
         void set_material(material_ptr material);
+
+        program_ptr get_program() { return _program; };
+
         //
         //  Create a grid
         //  x : from -width/2 to width/2
         //  y : 0
         //  z : from hight/2 to -hight/2
         //
-        static std::shared_ptr<Mesh> create_from_grid(size_t width, size_t hight);
+        static std::shared_ptr<Mesh> create_from_grid(size_t width, size_t hight, program_ptr phong_program);
 
     private:
         GLuint VAO = 0, VBO = 0, EBO = 0;
 
-        void setup();
+        void setup(std::vector<Vertex> &&vertices,
+                   std::vector<GLuint> &&indices);
     };
 
     using mesh_ptr = std::shared_ptr<Mesh>;
@@ -80,31 +88,49 @@ namespace ogle
     ///////////////////////////////////////////////
     //  SkinnedMesh
     ///////////////////////////////////////////////
-    const size_t BONES_AMOUNT = 4;
+    const size_t MAX_BONE_AMOUNT_PER_VERTEX = 4;
     struct SkinnedVertex
     {
         glm::vec3 Position;
         glm::vec3 Normal;
         glm::vec2 TexCoords;
-        GLuint Bones[BONES_AMOUNT];
-        GLuint Weights[BONES_AMOUNT];
+        GLuint Bones[MAX_BONE_AMOUNT_PER_VERTEX];
+        GLfloat Weights[MAX_BONE_AMOUNT_PER_VERTEX];
     };
 
-    class SkinnedMesh
+    struct Bone
     {
+        std::string name;
+        glm::mat4 offset_matrix;
+        glm::mat4 final_transformation = glm::mat4(1.0f);
+        std::vector<size_t> children_index;
+    };
+
+    class SkinnedMesh : public Mesh
+    {
+        skinned_program_ptr _program;
         GLuint VAO = 0, VBO = 0, EBO = 0;
         size_t _index_size = 0;
+
+        std::vector<Bone> _bones;
 
         std::map<TEXTURE_TYPE, texture_ptr> _textures;
 
         void setup();
 
     public:
-        SkinnedMesh(std::vector<SkinnedVertex> &&vertices, std::vector<GLuint> &&indices, std::map<TEXTURE_TYPE, texture_ptr> &&textures);
+        SkinnedMesh(std::vector<SkinnedVertex> &&vertices,
+                    std::vector<GLuint> &&indices,
+                    std::map<TEXTURE_TYPE, texture_ptr> &&textures,
+                    std::vector<Bone> &&bones,
+                    skinned_program_ptr skinned_program);
 
-        void update(double time);
+        void update_bone_transformation(std::string_view bone_name, const glm::mat4 &transformation);
 
-        void draw(program_ptr program, bool wired = false);
+        virtual void draw(double time,
+                          bool wired = false,
+                          std::function<void(program_ptr)> set_custom_state = nullptr);
+
     };
 
     using skinned_mesh_ptr = std::shared_ptr<SkinnedMesh>;

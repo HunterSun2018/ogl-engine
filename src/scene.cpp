@@ -59,22 +59,35 @@ namespace ogle
         }
     }
 
-    void Scene::draw(program_ptr program)
+    void Scene::draw(double time, std::function<void(program_ptr)> set_custom_state)
     {
-        update_lights(dynamic_pointer_cast<ProgramLight>(program));
-
         for (const auto &[mesh, mat] : _meshes)
         {
-            update_model_matrix(dynamic_pointer_cast<ProgramMatrix>(program), mat);
+            auto set_program_state = [=, &mat = mat, this](program_ptr program)
+            {
+                update_lights(dynamic_pointer_cast<ProgramLight>(program));
+                update_model_matrix(dynamic_pointer_cast<ProgramMatrix>(program), mat);
 
-            mesh->draw(program);
+                if (set_custom_state)
+                    set_custom_state(program);
+            };
+
+            mesh->draw(time, false, set_program_state);
         }
 
         for (const auto &[model, mat] : _models)
         {
-            update_model_matrix(dynamic_pointer_cast<ProgramMatrix>(program), mat);
+            auto set_program_state = [=, &mat = mat, this](program_ptr program)
+            {
+                update_lights(dynamic_pointer_cast<ProgramLight>(program));
 
-            model->draw(program);
+                update_model_matrix(dynamic_pointer_cast<ProgramMatrix>(program), mat);
+
+                if (set_custom_state)
+                    set_custom_state(program);
+            };
+
+            model->draw(time, false, set_program_state);
         }
     }
 

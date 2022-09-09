@@ -12,9 +12,10 @@ namespace ogle
         ~Model() = default;
 
         static std::shared_ptr<Model>
-        create_from_file(std::string_view model_file_name);
+        create_from_file(std::string_view model_file_name, program_factory_ptr program_factory);
 
-        virtual void draw(program_ptr program, bool wired = false) = 0;
+        virtual void draw(double time, bool wired = false,
+                          std::function<void(program_ptr)> set_custom_state = nullptr) = 0;
     };
 
     using model_ptr = std::shared_ptr<Model>;

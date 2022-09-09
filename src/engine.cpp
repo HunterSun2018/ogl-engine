@@ -184,9 +184,14 @@ namespace ogle
     {
         string shaders_path = "resources/shaders";
 
-        auto program = PhongProgram::create(shaders_path + "/spirv/vertex.spv",
-                                            shaders_path + "/spirv/fragment.spv");
-        _programs["Phong"] = program;
+        _programs["Phong"] = PhongProgram::create(shaders_path + "/spirv/vertex.spv",
+                                                  shaders_path + "/spirv/fragment.spv");
+
+        _programs["Skinned"] = SkinnedProgram::create(shaders_path + "/spirv/vs_skinned.spv",
+                                                      shaders_path + "/spirv/fs_skinned.spv");
+
+        _programs["Simple"] = SimpleProgram::create(shaders_path + "/spirv/vs_simple.spv",
+                                                    shaders_path + "/spirv/fs_simple.spv");
     }
 
     void showFPS(GLFWwindow *pWindow)
@@ -267,15 +272,13 @@ namespace ogle
         if (!window)
             throw runtime_error("The method 'set_window' wasn't called at once.");
 
-        auto program = _programs["Phong"];
-
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
 
         while (!glfwWindowShouldClose(window))
         {
             glfwPollEvents();
-            glfwGetTime();
+            double time = glfwGetTime();
 
             camera->process_input(window);
             show_gui(window);
@@ -286,10 +289,12 @@ namespace ogle
             glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // RGBA
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            // Update program matrices
-            camera->update_program_matrix(dynamic_pointer_cast<ProgramMatrix>(program));
-
-            sence->draw(program);
+            sence->draw(time,
+                        [=](program_ptr program)
+                        {
+                            // Update program matrices
+                            camera->update_program_matrix(dynamic_pointer_cast<ProgramMatrix>(program));
+                        });
 
             auto error = glGetError();
             check_error(error);

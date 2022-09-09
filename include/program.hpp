@@ -49,6 +49,26 @@ namespace ogle
     };
 
     using program_light_ptr = std::shared_ptr<ProgramLight>;
+
+    struct ProgramSkinned
+    {
+        virtual ~ProgramSkinned() = default;
+
+        virtual void set_bone_transforms(const std::array<glm::mat4, 100> &transforms) = 0;
+    };
+
+    using program_skinned_ptr = std::shared_ptr<ProgramSkinned>;
+
+    class SimpleProgram : public Program, public ProgramMatrix
+    {
+    public:
+        virtual ~SimpleProgram() = default;
+
+        static std::shared_ptr<SimpleProgram>
+        create(std::string_view vs_file_name, std::string_view fs_file_name);
+    };
+
+    using simple_progrm_ptr = std::shared_ptr<SimpleProgram>;
     
     /**
      * @brief Phong light model program
@@ -58,32 +78,6 @@ namespace ogle
     {
     public:
         virtual ~PhongProgram() = default;
-
-        // //
-        // //  Program methods
-        // //
-        // virtual void apply() override;
-        // //
-        // //  Camera settings
-        // //
-        // virtual void set_world_matrix(const glm::mat4 &world) override;
-
-        // virtual void set_view_matrix(const glm::mat4 &view) override;
-
-        // virtual void set_project_matrix(const glm::mat4 &project) override;
-
-        // virtual void set_mvp_matrices(glm::mat4 m, glm::mat4 v, glm::mat4 p) override;
-        // //
-        // //  Material settings
-        // //
-        // virtual void set_material(material_ptr materail) override;
-        // //
-        // //  Light settings
-        // //
-        // virtual void set_direction_light(const DirectionLight &dir_light) override;
-
-        // virtual void set_point_light(size_t index, const PointLight &point_light) override;
-
         //
         //  Create Phong Program shared ptr
         //
@@ -103,4 +97,35 @@ namespace ogle
     };
 
     using env_map_program_ptr = std::shared_ptr<EnvironmentMapProgram>;
+
+    class SkinnedProgram : public Program,
+                           public ProgramMaterial,
+                           public ProgramMatrix,
+                           public ProgramLight,
+                           public ProgramSkinned
+    {
+    public:
+        virtual ~SkinnedProgram() = default;
+        //
+        //  Create skinned mesh progrom shared pointer
+        //
+        static std::shared_ptr<SkinnedProgram>
+        create(std::string_view vs_file_name, std::string_view fs_file_name);
+    };
+
+    using skinned_program_ptr = std::shared_ptr<SkinnedProgram>;
+
+    //
+    // Program factory
+    //
+    struct ProgramFactory
+    {
+        virtual ~ProgramFactory() = default;
+
+        virtual std::vector<std::string_view> list_progrom() = 0;
+
+        virtual program_ptr get_program(std::string_view program_name) = 0;
+    };
+
+    using program_factory_ptr = std::shared_ptr<ProgramFactory>;
 }

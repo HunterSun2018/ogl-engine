@@ -12,9 +12,9 @@ namespace ogle
     private:
         /* data */
         std::list<std::tuple<mesh_ptr, glm::mat4>> _meshes;
-        std::list<std::tuple<model_ptr,glm::mat4>> _models;
+        std::list<std::tuple<model_ptr, glm::mat4>> _models;
         DirectionLight _dir_light;
-        
+
         std::vector<point_light_ptr> _point_lights;
 
         void update_lights(program_light_ptr program_light);
@@ -34,7 +34,7 @@ namespace ogle
 
         void add_point_light(point_light_ptr point_light);
 
-        void draw(program_ptr program);
+        void draw(double time, std::function<void(program_ptr)> set_custom_state = nullptr);
     };
 
     using sence_ptr = std::shared_ptr<Scene>;

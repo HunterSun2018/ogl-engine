@@ -86,6 +86,71 @@ namespace ogle
         return prog;
     }
 
+    class SimpleProgramImp : public SimpleProgram
+    {
+        GLuint _program;
+        GLuint _ubo_vs;
+        glm::mat4 _mat_model, _mat_view, _mat_project;
+
+        struct Uniform
+        {
+            glm::mat4 mat_mv;
+            glm::mat4 mat_mvp;
+        } _uniform;
+
+    public:
+        SimpleProgramImp(GLuint program)
+        {
+            _program = program;
+
+            glGenBuffers(1, &_ubo_vs);
+            glBindBuffer(GL_UNIFORM_BUFFER, _ubo_vs);
+            glBufferData(GL_UNIFORM_BUFFER, sizeof(Uniform), nullptr, GL_STREAM_DRAW);
+        }
+
+        virtual void set_model_matrix(const glm::mat4 &model) override
+        {
+            _mat_model = model;
+        }
+
+        virtual void set_view_matrix(const glm::mat4 &view) override
+        {
+            _mat_view = view;
+        }
+
+        virtual void set_project_matrix(const glm::mat4 &project) override
+        {
+            _mat_project = project;
+        }
+
+        virtual void set_mvp_matrices(glm::mat4 m, glm::mat4 v, glm::mat4 p) override
+        {
+            _mat_model = m;
+            _mat_view = v;
+            _mat_project = p;
+        }
+
+        virtual void apply() override
+        {
+            _uniform.mat_mvp = _mat_project * _mat_view * _mat_model;
+            _uniform.mat_mv = _mat_view * _mat_model;
+
+            glUseProgram(_program);
+
+            glBindBuffer(GL_UNIFORM_BUFFER, _ubo_vs);
+            glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(Uniform), &_uniform);
+            glBindBufferBase(GL_UNIFORM_BUFFER, 0, _ubo_vs);
+        }
+    };
+
+    std::shared_ptr<SimpleProgram>
+    SimpleProgram::create(std::string_view vs_file_name, std::string_view fs_file_name)
+    {
+        auto program = make_shared<SimpleProgramImp>(create_program(vs_file_name, fs_file_name));
+
+        return static_pointer_cast<SimpleProgram>(program);
+    }
+
     /**
      * @brief Phong light model program
      *
@@ -235,4 +300,152 @@ namespace ogle
         return static_pointer_cast<PhongProgram>(make_shared<PhongProgramImp>(create_program(vs_file_name, fs_file_name)));
     }
 
+    /**
+     * @brief Skinned mesh program implementation
+     *
+     */
+    class SkinnedProgramImp : public SkinnedProgram
+    {
+        enum uniform_binding_index
+        {
+            VERTEX,
+            MATERIAL,
+            LIGHTING,
+        };
+
+        GLuint _program;
+        GLuint _ubo_vs, _ubo_fs, _ubo_bones;
+
+        glm::mat4 _mat_model, _mat_view, _mat_project;
+        material_ptr _material;
+        DirectionLight _dir_light;
+        PointLight _point_lights[4];
+
+        struct VsUniform
+        {
+            glm::mat4 mat_mv;
+            glm::mat4 mat_mvp;
+            // std::array<glm::mat4, 100> bones;
+            glm::mat4 bones[100];
+        } _vs_uniform;
+
+        struct BoneTransforamtion
+        {
+            glm::mat4 bones[100];
+        } _bone_transformation;
+
+        struct FsUniform // Fragment shader uniform
+        {
+            DirectionLight dir_light;
+            PointLight point_lights[MAX_POINT_LIGHT_NUMBER];
+        } _fs_uniform; //__attribute__((packed))
+
+    public:
+        SkinnedProgramImp(GLuint program)
+        {
+            _program = program;
+
+            glUseProgram(_program);
+
+            glGenBuffers(1, &_ubo_vs);
+            glBindBuffer(GL_UNIFORM_BUFFER, _ubo_vs);
+            glBufferData(GL_UNIFORM_BUFFER, sizeof(VsUniform), nullptr, GL_STREAM_DRAW);
+
+            // glGenBuffers(1, &_ubo_bones);
+            // glBindBuffer(GL_UNIFORM_BUFFER, _ubo_bones);
+            // glBufferData(GL_UNIFORM_BUFFER, sizeof(Material), glm::_bone_transformation.bones[0], GL_STREAM_DRAW);
+
+            glGenBuffers(1, &_ubo_fs);
+            glBindBuffer(GL_UNIFORM_BUFFER, _ubo_fs);
+            glBufferData(GL_UNIFORM_BUFFER, sizeof(FsUniform), nullptr, GL_STREAM_DRAW);
+        }
+
+        ~SkinnedProgramImp()
+        {
+            if (glIsProgram(_program))
+                glDeleteProgram(_program);
+        }
+
+        virtual void set_material(material_ptr material) override
+        {
+            _material = material;
+        }
+
+        virtual void set_model_matrix(const glm::mat4 &model) override
+        {
+            _mat_model = model;
+        }
+
+        virtual void set_view_matrix(const glm::mat4 &view) override
+        {
+            _mat_view = view;
+        }
+
+        virtual void set_project_matrix(const glm::mat4 &project) override
+        {
+            _mat_project = project;
+        }
+
+        virtual void set_mvp_matrices(glm::mat4 m, glm::mat4 v, glm::mat4 p) override
+        {
+            _mat_view = v;
+            _mat_project = p;
+        }
+
+        virtual void set_direction_light(const DirectionLight &dir_light) override
+        {
+            _dir_light = dir_light;
+        }
+
+        virtual void set_point_light(size_t index, const PointLight &point_light) override
+        {
+            if (index >= MAX_POINT_LIGHT_NUMBER)
+                throw range_error(format("The index {} is more than MAX_POINT_LIGHT_NUMBER {}", index, MAX_POINT_LIGHT_NUMBER));
+
+            _point_lights[index] = point_light;
+        }
+
+        virtual void set_bone_transforms(const std::array<glm::mat4, 100> &transforms) override
+        {
+            //_vs_uniform.bones = transforms;
+            copy(begin(transforms), end(transforms), begin(_vs_uniform.bones));
+
+            // For debug skinned vertex shader
+            // fill(begin(_vs_uniform.bones), end(_vs_uniform.bones), mat4(1.0));
+            vec3 scale, scale1, trans, trans1, skew;
+            quat orient, orient1;
+            vec4 perspective;
+
+            glm::decompose(transforms[0], scale, orient, trans, skew, perspective);
+            glm::decompose(transforms[1], scale1, orient1, trans1, skew, perspective);
+        }
+
+        virtual void apply() override
+        {
+            _fs_uniform.dir_light.direction = glm::mat3(_mat_view) * (_dir_light.direction);
+
+            for (size_t i = 0; i < 4; i++)
+                _fs_uniform.point_lights[i].position = _mat_view * vec4(_point_lights[i].position, 1.0);
+
+            _vs_uniform.mat_mvp = _mat_project * _mat_view * _mat_model;
+            _vs_uniform.mat_mv = _mat_view * _mat_model;
+
+            glUseProgram(_program);
+
+            glBindBuffer(GL_UNIFORM_BUFFER, _ubo_vs);
+            glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(VsUniform), &_vs_uniform);
+            glBindBufferBase(GL_UNIFORM_BUFFER, 0, _ubo_vs);
+
+            glBindBuffer(GL_UNIFORM_BUFFER, _ubo_fs);
+            glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(FsUniform), &_fs_uniform);
+            glBindBufferBase(GL_UNIFORM_BUFFER, 2, _ubo_fs);
+        }
+    };
+
+    std::shared_ptr<SkinnedProgram>
+    SkinnedProgram::create(std::string_view vs_file_name, std::string_view fs_file_name)
+    {
+        return static_pointer_cast<SkinnedProgram>(
+            make_shared<SkinnedProgramImp>(create_program(vs_file_name, fs_file_name)));
+    }
 }

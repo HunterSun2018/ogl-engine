@@ -31,13 +31,16 @@ void run()
     //
     auto engine = Engine::instance();
     engine->create_window(width, height, "Demo");
-
+    
+    auto program_factory = engine->get_program_factory();
+    auto list = program_factory->list_progrom();
+    
     //
     //  Create a sence and add some meshes
     //
     auto scene = make_shared<Scene>();
     auto material = make_shared<Material>(32.f);
-    auto mesh = Mesh::create_from_grid(100, 100);
+    auto mesh = Mesh::create_from_grid(100, 100, program_factory->get_program("Phong"));
     mesh->set_texture(TEXTURE_TYPE::TEX_DIFFUSE,
                       Texture::create_2D_texture("resources/textures/2d/floor.jpg", "floor", false));
     mesh->set_texture(TEXTURE_TYPE::TEX_SPECULAR,
@@ -46,7 +49,7 @@ void run()
 
     scene->add(mesh);
 
-    scene->set_direction_light(glm::vec3{-1.f, -0.2f, -1.f},
+    scene->set_direction_light(glm::vec3{-1.f, -1.f, 1.f},
                                glm::vec3{0.2f, 0.2f, 0.2f},
                                glm::vec3{1.0f, 1.0f, 1.0f},
                                glm::vec3{1.0f, 1.0f, 1.0f});
@@ -72,11 +75,11 @@ void run()
     scene->add_point_light(make_shared<PointLight>(red_point_light));
     scene->add_point_light(make_shared<PointLight>(green_point_light));
 
-    auto morak = Model::create_from_file("resources/models/morak/morak.fbx");
+    auto morak = Model::create_from_file("resources/models/morak/morak.fbx", program_factory);
 
     // scale 1 / 100 and translate to (0, 0, -10)
 
-    auto mat_model = glm::translate(mat4(1.0f), vec3(0.f, 0.f, -20.0f));
+    auto mat_model = glm::translate(mat4(1.0f), vec3(0.f, 0.f, -5.0f));
     mat_model = glm::scale(mat_model, vec3(0.01, 0.01, 0.01));
 
     scene->add(morak, mat_model);

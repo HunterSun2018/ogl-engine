@@ -44,7 +44,7 @@ namespace ogle
             }
         };
 
-        cerr << fmt::format("[GLDEBUG] {} {} {}: {}", enum_to_str(src), enum_to_str(type), enum_to_str(severity), msg) << endl;
+        cerr << fmt::format("[GLDEBUG] {} {} {}: {}", enum_to_str(src), enum_to_str(type), enum_to_str(severity), msg) << endl;       
     }
 
     void GLAPIENTRY check_error(GLenum error)

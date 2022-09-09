@@ -18,10 +18,9 @@ layout(location = 0) in vec3 attr_vertex;
 layout(location = 1) in vec3 attr_normal;
 layout(location = 2) in vec2 attr_texcoord;
 
-layout(location = 3) out vec3 vpos;
-layout(location = 4) out vec3 norm;
-layout(location = 5) out vec3 ldir;
-layout(location = 6) out vec2 texcoord;
+layout(location = 0) out vec3 vpos;
+layout(location = 1) out vec3 norm;
+layout(location = 2) out vec2 texcoord;
 
 void main()
 {
@@ -30,9 +29,7 @@ void main()
 	vpos = (matrix.mvmat * vec4(attr_vertex, 1.0f)).xyz;
 
 	norm = mat3(matrix.mvmat) * attr_normal;
-	
-	ldir = matrix.light_pos - vpos;
-
+		
 	texcoord = attr_texcoord;
 }
 
