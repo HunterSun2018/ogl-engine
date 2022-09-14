@@ -182,16 +182,16 @@ namespace ogle
 
     void Engine::create_programs()
     {
-        string shaders_path = "resources/shaders";
+        string shaders_path = "resources/shaders/";
 
-        _programs["Phong"] = PhongProgram::create(shaders_path + "/spirv/vertex.spv",
-                                                  shaders_path + "/spirv/fragment.spv");
+        _programs["Phong"] = PhongProgram::create(shaders_path + "spirv/vertex.spv",
+                                                  shaders_path + "spirv/fragment.spv");
 
-        _programs["Skinned"] = SkinnedProgram::create(shaders_path + "/spirv/vs_skinned.spv",
-                                                      shaders_path + "/spirv/fs_skinned.spv");
+        _programs["Skinned"] = SkinnedProgram::create(shaders_path + "spirv/vs_skinned.spv",
+                                                      shaders_path + "spirv/fs_skinned.spv");
 
-        _programs["Simple"] = SimpleProgram::create(shaders_path + "/spirv/vs_simple.spv",
-                                                    shaders_path + "/spirv/fs_simple.spv");
+        _programs["Simple"] = SimpleProgram::create(shaders_path + "spirv/vs_simple.spv",
+                                                    shaders_path + "spirv/fs_simple.spv");
     }
 
     void showFPS(GLFWwindow *pWindow)
@@ -274,6 +274,7 @@ namespace ogle
 
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
+        glDepthFunc(GL_LESS);
 
         while (!glfwWindowShouldClose(window))
         {

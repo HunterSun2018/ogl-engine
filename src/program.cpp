@@ -24,7 +24,9 @@ namespace ogle
         else
         {
             string buffer(istreambuf_iterator<char>(ifs), {});
-            glShaderSource(shader, 1, (const GLchar **)buffer.data(), 0);
+            char *txt[] = {buffer.data()};
+
+            glShaderSource(shader, 1, txt, 0);
             glCompileShader(shader);
         }
 
@@ -323,11 +325,20 @@ namespace ogle
 
         struct VsUniform
         {
+            glm::mat4 bones[100];
             glm::mat4 mat_mv;
             glm::mat4 mat_mvp;
             // std::array<glm::mat4, 100> bones;
-            glm::mat4 bones[100];
         } _vs_uniform;
+
+        // static const int MAX_BONES = 100;
+        // struct VsUniform
+        // {
+        //     glm::mat4 bones[MAX_BONES];
+        //     glm::mat4 model;
+        //     glm::mat4 view;
+        //     glm::mat4 projection;
+        // } _vs_uniform;
 
         struct BoneTransforamtion
         {
@@ -409,15 +420,6 @@ namespace ogle
         {
             //_vs_uniform.bones = transforms;
             copy(begin(transforms), end(transforms), begin(_vs_uniform.bones));
-
-            // For debug skinned vertex shader
-            // fill(begin(_vs_uniform.bones), end(_vs_uniform.bones), mat4(1.0));
-            vec3 scale, scale1, trans, trans1, skew;
-            quat orient, orient1;
-            vec4 perspective;
-
-            glm::decompose(transforms[0], scale, orient, trans, skew, perspective);
-            glm::decompose(transforms[1], scale1, orient1, trans1, skew, perspective);
         }
 
         virtual void apply() override
@@ -429,6 +431,9 @@ namespace ogle
 
             _vs_uniform.mat_mvp = _mat_project * _mat_view * _mat_model;
             _vs_uniform.mat_mv = _mat_view * _mat_model;
+            // _vs_uniform.projection = _mat_project;
+            // _vs_uniform.view = _mat_view;
+            // _vs_uniform.model = _mat_model;
 
             glUseProgram(_program);
 
@@ -436,9 +441,9 @@ namespace ogle
             glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(VsUniform), &_vs_uniform);
             glBindBufferBase(GL_UNIFORM_BUFFER, 0, _ubo_vs);
 
-            glBindBuffer(GL_UNIFORM_BUFFER, _ubo_fs);
-            glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(FsUniform), &_fs_uniform);
-            glBindBufferBase(GL_UNIFORM_BUFFER, 2, _ubo_fs);
+            // glBindBuffer(GL_UNIFORM_BUFFER, _ubo_fs);
+            // glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(FsUniform), &_fs_uniform);
+            // glBindBufferBase(GL_UNIFORM_BUFFER, 2, _ubo_fs);
         }
     };
 

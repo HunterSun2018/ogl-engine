@@ -363,59 +363,7 @@ namespace ogle
 
                 //     vertex_bone_index++;
                 // }
-            }
-
-            for (auto &v : skinned_vextices)
-            {
-                // v.Bones[0] = 0;
-                //    v.Weights[0] = 0.25f;
-                //    v.Bones[1] = 20;
-                //    v.Weights[1] = 0.25f;
-                //    v.Bones[2] = 40;
-                //    v.Weights[2] = 0.25;
-                //    v.Bones[3] = 60;
-                //    v.Weights[3] = 0.25;
-
-                // v.Bones[0] = 3;
-                for (auto &b : v.Bones)
-                {
-                    // b = 2;
-                    //  if (b >= bones.size())
-                    //      cout << v.Bones[0] << endl;
-                    //  b = 0;
-                    //  if()
-                    //  if (b > 3)
-                    //  b = 99;
-                    //  if (b != id)
-                    //     assert(false);
-                }
-
-                float weights = 0.f;
-                for (const auto &b : v.Weights)
-                {
-                    weights += b;
-                }
-
-                if (fabs(1.0f - weights) >= 1e-2)
-                {
-                    cout << format("weights {} is not equal to 1.0, {}:{}, {}:{},{}:{}, {}:{} ",
-                                   weights,
-                                   v.Bones[0], v.Weights[0],
-                                   v.Bones[1], v.Weights[1],
-                                   v.Bones[2], v.Weights[2],
-                                   v.Bones[3], v.Weights[3])
-                         << endl;
-                    // v.Bones[0] = 0;
-                    // v.Weights[0] = 1.0f,
-                    // v.Weights[1] = v.Weights[2] = v.Weights[3] = 0.0f;
-                }
-
-                mat4 t(0.0f);
-                for (int i = 0; i < 4; i++)
-                    t += mat4(1.0f) * v.Weights[i];
-                // if (v.Bones[1] == 255 || v.Bones[2] == 255 || v.Bones[3] == 255)
-                //     cout << v.Bones[1] << endl;
-            }
+            }            
 
             return bones;
         }
@@ -443,7 +391,7 @@ namespace ogle
                     key_frames[j].time = pNodeAnim->mScalingKeys[j].mTime;
 
                     key_frames[j].scaling = vec3_cast(pNodeAnim->mScalingKeys[j].mValue);
-                    key_frames[j].rotation = quat_cast(pNodeAnim->mRotationKeys[j].mValue);
+                    key_frames[j].rotation = quat_cast(pNodeAnim->mRotationKeys[j].mValue.Normalize());
                     key_frames[j].translation = pNodeAnim->mNumPositionKeys == 1 ? vec3_cast(pNodeAnim->mPositionKeys[0].mValue) : vec3_cast(pNodeAnim->mPositionKeys[j].mValue);
                 }
 
@@ -459,11 +407,15 @@ namespace ogle
 
             if (auto iter = anim->node_anims.find(node->name); iter != end(anim->node_anims))
             {
-                auto &transform = iter->second[anim_time];
+                auto &transform = iter->second[0];
+
+                if (iter->second.size() != 1)
+                    transform = iter->second[anim_time];
+
                 mat4 identity(1.0f), scaling, rotation, translation;
 
                 scaling = scale(identity, transform.scaling);
-                rotation = glm::mat4_cast(transform.rotation);
+                rotation = glm::mat4_cast(transform.rotation); // glm::normalize(transform.rotation)
                 translation = translate(identity, transform.translation);
 
                 node_transformation = translation * rotation * scaling;
@@ -504,7 +456,7 @@ namespace ogle
                 mesh->draw(time, wired, set_custom_state);
             }
 
-            draw_bones(time, set_custom_state);
+            // draw_bones(time, set_custom_state);
         }
 
         void draw_bones(double time, std::function<void(program_ptr)> set_custom_state)

@@ -210,21 +210,23 @@ namespace ogle
         //
         //  Set vertex attribute points
         //
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(SkinnedVertex), (GLvoid *)0);
+        glEnableVertexAttribArray(VA_POSTION);
+        glVertexAttribPointer(VA_POSTION, 3, GL_FLOAT, GL_FALSE, sizeof(SkinnedVertex), (GLvoid *)0);
 
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(SkinnedVertex), (GLvoid *)offsetof(SkinnedVertex, Normal));
+        glEnableVertexAttribArray(VA_NORMAL);
+        glVertexAttribPointer(VA_NORMAL, 3, GL_FLOAT, GL_FALSE, sizeof(SkinnedVertex), (GLvoid *)offsetof(SkinnedVertex, Normal));
 
-        glEnableVertexAttribArray(2);
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(SkinnedVertex), (GLvoid *)offsetof(SkinnedVertex, TexCoords));
+        glEnableVertexAttribArray(VA_TEXCOORD);
+        glVertexAttribPointer(VA_TEXCOORD, 2, GL_FLOAT, GL_FALSE, sizeof(SkinnedVertex), (GLvoid *)offsetof(SkinnedVertex, TexCoords));
 
-        glEnableVertexAttribArray(3);
-        glVertexAttribPointer(3, 4, GL_UNSIGNED_INT, GL_FALSE, sizeof(SkinnedVertex), (GLvoid *)offsetof(SkinnedVertex, Bones));
+        glEnableVertexAttribArray(VA_BONES);
+        glVertexAttribIPointer(VA_BONES, 4, GL_INT, sizeof(SkinnedVertex), (GLvoid *)offsetof(SkinnedVertex, Bones));
 
-        glEnableVertexAttribArray(4);
-        glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(SkinnedVertex), (GLvoid *)offsetof(SkinnedVertex, Weights));
+        glEnableVertexAttribArray(VA_WEIGHT);
+        glVertexAttribPointer(VA_WEIGHT, 4, GL_FLOAT, GL_FALSE, sizeof(SkinnedVertex), (GLvoid *)offsetof(SkinnedVertex, Weights));
 
+        if (glGetError() != GL_NO_ERROR)
+            throw runtime_error("Failed to generate buffer!");
         //
         //  Unbind VAO object
         //

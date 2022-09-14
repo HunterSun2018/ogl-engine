@@ -17,13 +17,13 @@
 
 namespace ogle
 {
-    enum
+    enum VertexAttr
     {
-        VATTR_POSTION,
-        VATTR_NORMAL,
-        VATTR_TEXCOORD,
-        VATTR_BONES,
-        VATTR_WEIGHT,
+        VA_POSTION,
+        VA_NORMAL,
+        VA_TEXCOORD,
+        VA_BONES,
+        VA_WEIGHT,
     };
 
     struct Vertex
