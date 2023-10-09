@@ -30,7 +30,7 @@ namespace ogle
         //
         static std::shared_ptr<Texture>
         create_2D_texture(u_char *pdata, size_t size, std::string_view name, bool flip);
-
+        
         void setTextureHDR(const char *texPath, std::string texName, bool texFlip);
         void setTextureHDR(GLuint width, GLuint height, GLenum format, GLenum internalFormat, GLenum type, GLenum minFilter);
         void setTextureCube(std::vector<const char *> &faces, bool texFlip);
@@ -44,4 +44,20 @@ namespace ogle
     };
 
     using texture_ptr = std::shared_ptr<Texture>;
+
+    struct CubeTexture
+    {        
+        virtual ~CubeTexture() = default;
+
+        
+    };
+    
+    // CubeTexture::CubeTexture(/* args */)
+    // {
+    // }
+    
+    // CubeTexture::~CubeTexture()
+    // {
+    // }
+    
 }

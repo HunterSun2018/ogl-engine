@@ -6,7 +6,7 @@
 
 namespace ogle
 {
-    class Engine : public ProgramFactory,
+    class Engine : public ProgramPool,
                    public std::enable_shared_from_this<Engine>
     {
     private:
@@ -33,10 +33,10 @@ namespace ogle
         {
             auto engine = shared_from_this();
             
-            return static_pointer_cast<ProgramFactory>(engine);            
+            return static_pointer_cast<ProgramPool>(engine);            
         }
 
-        virtual std::vector<std::string_view> list_progrom() override
+        virtual std::vector<std::string_view> list() override
         {
             using namespace std;
             vector<string_view> list;

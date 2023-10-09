@@ -182,16 +182,19 @@ namespace ogle
 
     void Engine::create_programs()
     {
-        string shaders_path = "resources/shaders/";
+        string shaders_path = "resources/shaders/spirv/";
 
-        _programs["Phong"] = PhongProgram::create(shaders_path + "spirv/vertex.spv",
-                                                  shaders_path + "spirv/fragment.spv");
+        _programs["Phong"] = PhongProgram::create(shaders_path + "vertex.spv",
+                                                  shaders_path + "fragment.spv");
 
-        _programs["Skinned"] = SkinnedProgram::create(shaders_path + "spirv/vs_skinned.spv",
-                                                      shaders_path + "spirv/fs_skinned.spv");
+        _programs["Skinned"] = SkinnedProgram::create(shaders_path + "vs_skinned.spv",
+                                                      shaders_path + "fs_skinned.spv");
 
-        _programs["Simple"] = SimpleProgram::create(shaders_path + "spirv/vs_simple.spv",
-                                                    shaders_path + "spirv/fs_simple.spv");
+        _programs["Simple"] = SimpleProgram::create(shaders_path + "vs_simple.spv",
+                                                    shaders_path + "fs_simple.spv");
+
+        _programs["Skybox"] = SkyboxProgram::create(shaders_path + "vs_skybox.spv",
+                                                    shaders_path + "fs_skybox.spv");
     }
 
     void showFPS(GLFWwindow *pWindow)

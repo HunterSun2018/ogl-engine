@@ -15,11 +15,11 @@ namespace ogle
     {
         auto mesh = make_shared<Mesh>();
 
-        mesh->_textures = move(textures);
+        mesh->_textures = std::move(textures);
         mesh->_program = program;
         mesh->_indieces_count = indices.size();
 
-        mesh->setup(move(vertices), move(indices));
+        mesh->setup(std::move(vertices), std::move(indices));
 
         return mesh;
     }
@@ -169,7 +169,7 @@ namespace ogle
             }
         }
 
-        return Mesh::create(move(vertices), move(indices), move(textures), phong_program);
+        return Mesh::create(std::move(vertices), std::move(indices), std::move(textures), phong_program);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -181,8 +181,8 @@ namespace ogle
                              std::vector<Bone> &&bones,
                              skinned_program_ptr skinned_program)
     {
-        _textures = move(textures);
-        _bones = move(bones);
+        _textures = std::move(textures);
+        _bones = std::move(bones);
         _program = skinned_program;
 
         //
@@ -285,8 +285,11 @@ namespace ogle
 
         if (_textures.find(TEX_SPECULAR) != end(_textures))
         {
-            glActiveTexture(GL_TEXTURE0 + TEX_SPECULAR);
-            glBindTexture(GL_TEXTURE_2D, _textures[TEX_SPECULAR]->getTexID());
+            //if (_textures[TEX_SPECULAR])
+            {
+                glActiveTexture(GL_TEXTURE0 + TEX_SPECULAR);
+                glBindTexture(GL_TEXTURE_2D, _textures[TEX_SPECULAR]->getTexID());
+            }
         }
 
         if (wired) // Wireframe Mode

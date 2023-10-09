@@ -10,6 +10,7 @@
  */
 #pragma once
 //#include "pch.hpp"
+#include <functional>
 #include "texture.hpp"
 #include "program.hpp"
 

@@ -1,14 +1,17 @@
+echo "$0 $1"
+
 # complie phong shaders
-glslangValidator phong.vert -V -g -o spirv/vertex.spv
-glslangValidator phong.frag -V -g -o spirv/fragment.spv
+glslangValidator phong.vert -V -o spirv/vertex.spv $1
+glslangValidator phong.frag -V -o spirv/fragment.spv $1
 
 # compile skinned shaders
-glslangValidator skinned.vert -V -o spirv/vs_skinned.spv
-glslangValidator skinned.frag -V -g -o spirv/fs_skinned.spv
+glslangValidator skinned.vert -V -o spirv/vs_skinned.spv $1
+glslangValidator skinned.frag -V -o spirv/fs_skinned.spv $1
 
 # compile simple shaders
-glslangValidator simple.vert -V -g -o spirv/vs_simple.spv
-glslangValidator simple.frag -V -g -o spirv/fs_simple.spv
+glslangValidator simple.vert -V -o spirv/vs_simple.spv $1
+glslangValidator simple.frag -V -o spirv/fs_simple.spv $1
 
-#glslangValidator anim.vert -V -g -Od -o spirv/vs_skinned.spv
-#glslangValidator anim.frag -V -g -Od -o spirv/fs_skinned.spv
+# compile skybox shaders
+glslangValidator skybox.vert -V -o spirv/vs_skybox.spv $1
+glslangValidator skybox.frag -V -o spirv/fs_skybox.spv $1

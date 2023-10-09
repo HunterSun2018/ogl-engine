@@ -1,4 +1,5 @@
 #include "pch.hpp"
+#include <array>
 #include "program.hpp"
 
 using namespace std;
@@ -362,10 +363,6 @@ namespace ogle
             glBindBuffer(GL_UNIFORM_BUFFER, _ubo_vs);
             glBufferData(GL_UNIFORM_BUFFER, sizeof(VsUniform), nullptr, GL_STREAM_DRAW);
 
-            // glGenBuffers(1, &_ubo_bones);
-            // glBindBuffer(GL_UNIFORM_BUFFER, _ubo_bones);
-            // glBufferData(GL_UNIFORM_BUFFER, sizeof(Material), glm::_bone_transformation.bones[0], GL_STREAM_DRAW);
-
             glGenBuffers(1, &_ubo_fs);
             glBindBuffer(GL_UNIFORM_BUFFER, _ubo_fs);
             glBufferData(GL_UNIFORM_BUFFER, sizeof(FsUniform), nullptr, GL_STREAM_DRAW);
@@ -452,5 +449,59 @@ namespace ogle
     {
         return static_pointer_cast<SkinnedProgram>(
             make_shared<SkinnedProgramImp>(create_program(vs_file_name, fs_file_name)));
+    }
+
+    class SkyboxProgramImp : public SkyboxProgram
+    {
+        struct VsUniform
+        {
+            glm::mat4 projection;
+            glm::mat4 view;
+        } _vs_uniform;
+
+        GLuint _program;
+        GLuint _ubo_vs;
+
+    public:
+        SkyboxProgramImp(GLuint program)
+        {
+            _program = program;
+
+            glGenBuffers(1, &_ubo_vs);
+            glBindBuffer(GL_UNIFORM_BUFFER, _ubo_vs);
+            glBufferData(GL_UNIFORM_BUFFER, sizeof(VsUniform), nullptr, GL_STATIC_DRAW);
+        }
+
+        virtual void apply() override
+        {
+            glUseProgram(_program);
+
+            glBindBuffer(GL_UNIFORM_BUFFER, _ubo_vs);            
+            glBufferSubData(GL_UNIFORM_BUFFER, 0, sizeof(VsUniform), &_vs_uniform);
+            glBindBufferBase(GL_UNIFORM_BUFFER, 0, _ubo_vs);
+        }
+
+        virtual void set_model_matrix(const glm::mat4 &world) override
+        {
+        }
+
+        virtual void set_view_matrix(const glm::mat4 &view) override
+        {
+        }
+
+        virtual void set_project_matrix(const glm::mat4 &project) override
+        {
+        }
+
+        virtual void set_mvp_matrices(glm::mat4 m, glm::mat4 v, glm::mat4 p) override
+        {
+        }
+    };
+
+    std::shared_ptr<SkyboxProgram>
+    SkyboxProgram::create(std::string_view vs_file_name, std::string_view fs_file_name)
+    {
+        return static_pointer_cast<SkyboxProgram>(
+            make_shared<SkyboxProgramImp>(create_program(vs_file_name, fs_file_name)));
     }
 }

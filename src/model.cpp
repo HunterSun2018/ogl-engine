@@ -1,3 +1,4 @@
+#include <future>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -64,7 +65,7 @@ namespace ogle
     public:
         ModelImp(std::string_view model_file_name, program_factory_ptr program_factory)
         {
-            cout << format("Starting to load model file '{}' ...", model_file_name) << endl;
+            clog << format("Starting to load model file '{}' ...", model_file_name) << endl;
 
             _program_factory = program_factory;
 
@@ -97,7 +98,7 @@ namespace ogle
             for (uint i = 0; i < scene->mNumAnimations; i++)
             {
                 auto anim = load_animation(scene->mAnimations[i]);
-                _animations.push_back(move(anim));
+                _animations.push_back(std::move(anim));
             }
 
             _bone_line_size = generate_bone_vbo();
@@ -201,7 +202,7 @@ namespace ogle
                                          {0, 0, 0, 0},
                                          {0, 0, 0, 0}};
 
-                    skinned_vertices.emplace_back(move(vertex));
+                    skinned_vertices.emplace_back(std::move(vertex));
                 }
 
                 // Update bone info for skinned vertices
@@ -244,31 +245,34 @@ namespace ogle
 
                 // Specular
                 auto tex_specular = this->load_material_texture(pScene, material,
-                                                                aiTextureType_SPECULAR, "texture_diffuse");
-                textures[TEX_SPECULAR] = tex_specular;
+                                                                aiTextureType_SPECULAR, "texture_specular");
+                if (tex_specular)
+                    textures[TEX_SPECULAR] = tex_specular;
 
                 // Normal
-                auto tex_normals = this->load_material_texture(pScene, material,
-                                                               aiTextureType_NORMALS, "texture_diffuse");
-                textures[TEX_NORMAL] = tex_normals;
+                auto tex_normal = this->load_material_texture(pScene, material,
+                                                              aiTextureType_NORMALS, "texture_normal");
+                if (tex_normal)
+                    textures[TEX_NORMAL] = tex_normal;
 
                 // glossiness
                 auto tex_shininess = this->load_material_texture(pScene, material,
-                                                                 aiTextureType_SHININESS, "texture_diffuse");
-                textures[TEX_SHININESS] = tex_shininess;
+                                                                 aiTextureType_SHININESS, "texture_shiniess");
+                if (tex_shininess)
+                    textures[TEX_SHININESS] = tex_shininess;
             }
 
             if (pMesh->mNumBones > 0)
             {
                 auto skinned_program = dynamic_pointer_cast<SkinnedProgram>(_program_factory->get_program("Skinned"));
 
-                auto skinned_mesh = make_shared<SkinnedMesh>(move(skinned_vertices), move(indices), move(textures), move(bones), skinned_program);
+                auto skinned_mesh = make_shared<SkinnedMesh>(std::move(skinned_vertices), std::move(indices), std::move(textures), std::move(bones), skinned_program);
                 return dynamic_pointer_cast<Mesh>(skinned_mesh);
             }
             else
             {
                 auto program = dynamic_pointer_cast<PhongProgram>(_program_factory->get_program("Phong"));
-                return Mesh::create(move(vertices), move(indices), move(textures), program);
+                return Mesh::create(std::move(vertices), std::move(indices), std::move(textures), program);
             }
         }
 
@@ -363,7 +367,7 @@ namespace ogle
 
                 //     vertex_bone_index++;
                 // }
-            }            
+            }
 
             return bones;
         }
@@ -395,7 +399,7 @@ namespace ogle
                     key_frames[j].translation = pNodeAnim->mNumPositionKeys == 1 ? vec3_cast(pNodeAnim->mPositionKeys[0].mValue) : vec3_cast(pNodeAnim->mPositionKeys[j].mValue);
                 }
 
-                animation->node_anims[name] = move(key_frames);
+                animation->node_anims[name] = std::move(key_frames);
             }
 
             return animation;

@@ -69,7 +69,7 @@ namespace ogle
     };
 
     using simple_progrm_ptr = std::shared_ptr<SimpleProgram>;
-    
+
     /**
      * @brief Phong light model program
      *
@@ -115,17 +115,32 @@ namespace ogle
 
     using skinned_program_ptr = std::shared_ptr<SkinnedProgram>;
 
-    //
-    // Program factory
-    //
-    struct ProgramFactory
+    /**
+     * @brief Skybox Program
+     *
+     */
+    struct SkyboxProgram : public Program,
+                           public ProgramMatrix
     {
-        virtual ~ProgramFactory() = default;
+        virtual ~SkyboxProgram() = default;
 
-        virtual std::vector<std::string_view> list_progrom() = 0;
+        static std::shared_ptr<SkyboxProgram>
+        create(std::string_view vs_file_name, std::string_view fs_file_name);
+    };
+
+    using skybox_program_ptr = std::shared_ptr<SkyboxProgram>;
+
+    //
+    // Program Pool
+    //
+    struct ProgramPool
+    {
+        virtual ~ProgramPool() = default;
+
+        virtual std::vector<std::string_view> list() = 0;
 
         virtual program_ptr get_program(std::string_view program_name) = 0;
     };
 
-    using program_factory_ptr = std::shared_ptr<ProgramFactory>;
+    using program_factory_ptr = std::shared_ptr<ProgramPool>;
 }

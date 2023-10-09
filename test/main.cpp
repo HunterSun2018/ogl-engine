@@ -1,3 +1,4 @@
+#include <future>
 #include "ogle.hpp"
 
 using namespace std;
@@ -31,10 +32,10 @@ void run()
     //
     auto engine = Engine::instance();
     engine->create_window(width, height, "Demo");
-    
+
     auto program_factory = engine->get_program_factory();
-    auto list = program_factory->list_progrom();
-    
+    auto list = program_factory->list();
+
     //
     //  Create a sence and add some meshes
     //
@@ -49,7 +50,7 @@ void run()
 
     scene->add(mesh);
 
-    scene->set_direction_light(glm::vec3{-1.f, -1.f, 1.f},
+    scene->set_direction_light(glm::vec3{-1.f, -1.f, -1.f},
                                glm::vec3{0.2f, 0.2f, 0.2f},
                                glm::vec3{1.0f, 1.0f, 1.0f},
                                glm::vec3{1.0f, 1.0f, 1.0f});
@@ -76,13 +77,23 @@ void run()
     scene->add_point_light(make_shared<PointLight>(green_point_light));
 
     auto morak = Model::create_from_file("resources/models/morak/morak.fbx", program_factory);
+    // auto task_morak = std::async([=]() -> auto { //
+    //     // return Model::create_from_file("resources/models/morak/morak.fbx", program_factory);
+    //     return nullptr;
+    // });
+    // auto jennifer = async(&Model::create_from_file, "resources/models/jennifer/jennifer.fbx", program_factory);
 
-    // scale 1 / 100 and translate to (0, 0, -10)
-
-    auto mat_model = glm::translate(mat4(1.0f), vec3(0.f, 0.f, -5.0f));
+    auto mat_model = glm::translate(mat4(1.0f), vec3(3.f, 0.f, -5.0f));
     mat_model = glm::scale(mat_model, vec3(0.01, 0.01, 0.01));
 
     scene->add(morak, mat_model);
+
+    auto jennifer = Model::create_from_file("resources/models/jennifer/jennifer.fbx", program_factory);
+
+    mat_model = glm::translate(mat4(1.0f), vec3(-3.f, 0.f, -5.0f));
+    mat_model = glm::scale(mat_model, vec3(0.01, 0.01, 0.01));
+
+    scene->add(jennifer, mat_model);
 
     //
     //  Create a perspetive camera, set position and look at
