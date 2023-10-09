@@ -5,4 +5,4 @@ A C++ graphic engine for leaning OpenGL
 sudo apt install libglfw-dev libfmt-dev libstb-dev
 
 # Demo
-![Demo](./imgs/demo.gif "Demo")
+![Demo](imgs/demo.gif "Demo")
